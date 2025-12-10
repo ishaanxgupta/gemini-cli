@@ -6,8 +6,8 @@
 
 // packages/core/src/a2a/a2a-tool-manager.ts
 
-import { Config } from '../config/config.js';
-import { ToolRegistry } from '../tools/tool-registry.js';
+import type { Config } from '../config/config.js';
+import type { ToolRegistry } from '../tools/tool-registry.js';
 import { A2AClientManager } from './a2a-client-manager.js';
 import { A2ATool } from './a2a-tool.js';
 
@@ -23,13 +23,13 @@ export class A2AToolManager {
       return;
     }
 
-    const clientManager = A2AClientManager.getInstance();
+    const clientManager = A2AClientManager.getInstance(this.config);
     for (const name in agents) {
       const agentConfig = agents[name];
       try {
         const agentCard = await clientManager.loadAgent(
           name,
-          agentConfig.url,
+          agentConfig.agentCardUrl,
           agentConfig.accessToken,
         );
         if (agentCard.skills && agentCard.skills.length > 0) {

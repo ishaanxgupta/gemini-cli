@@ -42,7 +42,10 @@ describe('A2AToolManager', () => {
 
   it('should load agents and register tools on initialize', async () => {
     const agents: Record<string, A2AAgentConfig> = {
-      TestAgent: { url: 'http://test.agent', accessToken: 'test-token' },
+      TestAgent: {
+        agentCardUrl: 'http://test.agent',
+        accessToken: 'test-token',
+      },
     };
     const agentCard: AgentCard = completeAgentCard({
       name: 'TestAgent',

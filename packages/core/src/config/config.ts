@@ -218,7 +218,7 @@ export class MCPServerConfig {
 }
 
 export interface A2AAgentConfig {
-  url: string;
+  agentCardUrl: string;
   accessToken: string; // Temporary, to help develop and prototype
 }
 
