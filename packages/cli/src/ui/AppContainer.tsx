@@ -123,7 +123,7 @@ import { useIncludeDirsTrust } from './hooks/useIncludeDirsTrust.js';
 import { isWorkspaceTrusted } from '../config/trustedFolders.js';
 import { useAlternateBuffer } from './hooks/useAlternateBuffer.js';
 import { useSettings } from './contexts/SettingsContext.js';
-import { enableSupportedProtocol } from './utils/kittyProtocolDetector.js';
+import { terminalCapabilityManager } from './utils/terminalCapabilityManager.js';
 import { useInputHistoryStore } from './hooks/useInputHistoryStore.js';
 import { enableBracketedPaste } from './utils/bracketedPaste.js';
 import { useBanner } from './hooks/useBanner.js';
@@ -412,7 +412,7 @@ export const AppContainer = (props: AppContainerProps) => {
       app.rerender();
     }
     enableBracketedPaste();
-    enableSupportedProtocol();
+    terminalCapabilityManager.enableKittyProtocol();
     refreshStatic();
   }, [refreshStatic, isAlternateBuffer, app, config]);
 
@@ -1543,6 +1543,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       warningMessage,
       bannerData,
       bannerVisible,
+      terminalBackgroundColor: config.getTerminalBackground(),
     }),
     [
       isThemeDialogOpen,
@@ -1634,6 +1635,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       warningMessage,
       bannerData,
       bannerVisible,
+      config,
     ],
   );
 

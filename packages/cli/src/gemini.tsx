@@ -21,7 +21,9 @@ import {
   migrateDeprecatedSettings,
   SettingScope,
 } from './config/settings.js';
-import { themeManager } from './ui/themes/theme-manager.js';
+import { themeManager, DEFAULT_THEME } from './ui/themes/theme-manager.js';
+import { pickDefaultThemeName } from './ui/themes/theme.js';
+import { getThemeTypeFromBackgroundColor } from './ui/themes/color-utils.js';
 import { getStartupWarnings } from './utils/startupWarnings.js';
 import { getUserStartupWarnings } from './utils/userStartupWarnings.js';
 import { ConsolePatcher } from './ui/utils/ConsolePatcher.js';
@@ -73,7 +75,6 @@ import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
 import { runZedIntegration } from './zed-integration/zedIntegration.js';
 import { cleanupExpiredSessions } from './utils/sessionCleanup.js';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
-import { detectAndEnableKittyProtocol } from './ui/utils/kittyProtocolDetector.js';
 import { checkForUpdates } from './ui/utils/updateCheck.js';
 import { handleAutoUpdate } from './utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from './utils/events.js';
@@ -98,6 +99,10 @@ import { requestConsentNonInteractive } from './config/extensions/consent.js';
 import { ScrollProvider } from './ui/contexts/ScrollProvider.js';
 import { isAlternateBufferEnabled } from './ui/hooks/useAlternateBuffer.js';
 
+import {
+  terminalCapabilityManager,
+  type TerminalBackgroundColor,
+} from './ui/utils/terminalCapabilityManager.js';
 import { profiler } from './ui/components/DebugProfiler.js';
 
 const SLOW_RENDER_MS = 200;
@@ -526,6 +531,7 @@ export async function main() {
     }
 
     const wasRaw = process.stdin.isRaw;
+    let terminalBackground: TerminalBackgroundColor = undefined;
     if (config.isInteractive() && !wasRaw && process.stdin.isTTY) {
       // Set this as early as possible to avoid spurious characters from
       // input showing up in the output.
@@ -551,14 +557,53 @@ export async function main() {
         process.stdin.setRawMode(wasRaw);
       });
 
-      // Detect and enable Kitty keyboard protocol once at startup.
-      await detectAndEnableKittyProtocol();
+      // Detect terminal capabilities (Kitty protocol, background color) in parallel.
+      await terminalCapabilityManager.detectCapabilities();
+      terminalBackground =
+        terminalCapabilityManager.getTerminalBackgroundColor();
+    }
+
+    // Load custom themes from settings
+    themeManager.loadCustomThemes(settings.merged.ui?.customThemes);
+
+    if (settings.merged.ui?.theme) {
+      if (!themeManager.setActiveTheme(settings.merged.ui?.theme)) {
+        // If the theme is not found during initial load, log a warning and continue.
+        // The useThemeCommand hook in AppContainer.tsx will handle opening the dialog.
+        debugLogger.warn(
+          `Warning: Theme "${settings.merged.ui?.theme}" not found.`,
+        );
+      }
+    } else {
+      // If no theme is set, check terminal background color
+      const themeName = pickDefaultThemeName(
+        terminalBackground,
+        themeManager.getAllThemes(),
+        DEFAULT_THEME.name,
+        'Default Light',
+      );
+      themeManager.setActiveTheme(themeName);
     }
 
     setMaxSizedBoxDebugging(isDebugMode);
     const initAppHandle = startupProfiler.start('initialize_app');
+    config.setTerminalBackground(terminalBackground);
     const initializationResult = await initializeApp(config, settings);
     initAppHandle?.end();
+
+    if (terminalBackground !== undefined && !initializationResult.themeError) {
+      const currentTheme = themeManager.getActiveTheme();
+      if (currentTheme.type !== 'ansi' && currentTheme.type !== 'custom') {
+        const backgroundType =
+          getThemeTypeFromBackgroundColor(terminalBackground);
+        if (backgroundType && currentTheme.type !== backgroundType) {
+          coreEvents.emitFeedback(
+            'warning',
+            `Theme '${currentTheme.name}' (${currentTheme.type}) might look incorrect on your ${backgroundType} terminal background. Type /theme to change theme.`,
+          );
+        }
+      }
+    }
 
     if (
       settings.merged.security?.auth?.selectedType ===
