@@ -28,6 +28,7 @@ import {
   READ_FILE_TOOL_NAME,
   READ_MANY_FILES_TOOL_NAME,
   WEB_SEARCH_TOOL_NAME,
+  GET_INTERNAL_DOCS_TOOL_NAME,
 } from '../tools/tool-names.js';
 import { promptIdContext } from '../utils/promptIdContext.js';
 import {
@@ -53,6 +54,7 @@ import { type z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { debugLogger } from '../utils/debugLogger.js';
 import { getModelConfigAlias } from './registry.js';
+import { getVersion } from '../utils/version.js';
 
 /** A callback function to report on agent activity. */
 export type ActivityCallback = (activity: SubagentActivityEvent) => void;
@@ -223,7 +225,6 @@ export class LocalAgentExecutor<TOutput extends z.ZodTypeAny> {
 
     const { nextMessage, submittedOutput, taskCompleted } =
       await this.processFunctionCalls(functionCalls, combinedSignal, promptId);
-
     if (taskCompleted) {
       const finalResult = submittedOutput ?? 'Task completed successfully.';
       return {
@@ -387,10 +388,18 @@ export class LocalAgentExecutor<TOutput extends z.ZodTypeAny> {
     let chat: GeminiChat | undefined;
     let tools: FunctionDeclaration[] | undefined;
     try {
+      // Inject standard runtime context into inputs
+      const augmentedInputs = {
+        ...inputs,
+        cliVersion: await getVersion(),
+        activeModel: this.runtimeContext.getActiveModel(),
+        today: new Date().toLocaleDateString(),
+      };
+
       tools = this.prepareToolsList();
-      chat = await this.createChatObject(inputs, tools);
+      chat = await this.createChatObject(augmentedInputs, tools);
       const query = this.definition.promptConfig.query
-        ? templateString(this.definition.promptConfig.query, inputs)
+        ? templateString(this.definition.promptConfig.query, augmentedInputs)
         : 'Get Started!';
       let currentMessage: Content = { role: 'user', parts: [{ text: query }] };
 
@@ -853,8 +862,13 @@ export class LocalAgentExecutor<TOutput extends z.ZodTypeAny> {
 
       // Create a promise for the tool execution
       const executionPromise = (async () => {
+        // Use a proxy of the runtime context to provide the agent's specific tool registry
+        // while preserving access to all other global config settings.
+        const agentContext = Object.create(this.runtimeContext);
+        agentContext.getToolRegistry = () => this.toolRegistry;
+
         const { response: toolResponse } = await executeToolCall(
-          this.runtimeContext,
+          agentContext,
           requestInfo,
           signal,
         );
@@ -1034,6 +1048,7 @@ Important Rules:
       READ_MANY_FILES_TOOL_NAME,
       MEMORY_TOOL_NAME,
       WEB_SEARCH_TOOL_NAME,
+      GET_INTERNAL_DOCS_TOOL_NAME,
     ]);
     for (const tool of toolRegistry.getAllTools()) {
       if (!allowlist.has(tool.name)) {
