@@ -38,6 +38,7 @@ function createMockWaitingToolCall(
 ): WaitingToolCall {
   return {
     status: 'awaiting_approval',
+    correlationId: 'test-correlation-id',
     request: {
       callId: 'test-call-id',
       name: 'test-tool',

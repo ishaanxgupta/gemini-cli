@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { randomUUID } from 'node:crypto';
 import type {
   ToolCall,
   Status,
@@ -345,7 +346,7 @@ export class SchedulerStateManager {
     let confirmationDetails:
       | ToolCallConfirmationDetails
       | SerializableConfirmationDetails;
-    let correlationId: string | undefined;
+    let correlationId: string;
 
     if (this.isEventDrivenApprovalData(data)) {
       correlationId = data.correlationId;
@@ -353,6 +354,7 @@ export class SchedulerStateManager {
     } else {
       // TODO: Remove legacy callback shape once event-driven migration is complete
       confirmationDetails = data as ToolCallConfirmationDetails;
+      correlationId = randomUUID();
     }
 
     return {
