@@ -175,7 +175,7 @@ describe('confirmation.ts', () => {
       mockState.getToolCall.mockReturnValue(toolCall);
       // Default: define firstActiveCall for modifiers
       vi.spyOn(mockState, 'firstActiveCall', 'get').mockReturnValue(
-        toolCall as unknown as WaitingToolCall,
+        { ...toolCall, correlationId: '123e4567-e89b-12d3-a456-426614174000' } as unknown as WaitingToolCall,
       );
     });
 

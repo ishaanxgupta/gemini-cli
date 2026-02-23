@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 /**
  * @license
  * Copyright 2025 Google LLC
@@ -174,7 +175,10 @@ export class CoreToolScheduler {
     targetCallId: string,
     status: 'awaiting_approval',
     signal: AbortSignal,
-    confirmationDetails: ToolCallConfirmationDetails,
+    auxiliaryData: {
+      confirmationDetails: ToolCallConfirmationDetails;
+      correlationId: string;
+    },
   ): void;
   private setStatusInternal(
     targetCallId: string,
@@ -244,16 +248,22 @@ export class CoreToolScheduler {
             outcome,
           } as ErroredToolCall;
         }
-        case 'awaiting_approval':
+        case 'awaiting_approval': {
+          const { confirmationDetails, correlationId } = auxiliaryData as {
+            confirmationDetails: ToolCallConfirmationDetails;
+            correlationId: string;
+          };
           return {
             request: currentCall.request,
             tool: toolInstance,
             status: 'awaiting_approval',
-            confirmationDetails: auxiliaryData as ToolCallConfirmationDetails,
+            confirmationDetails,
+            correlationId,
             startTime: existingStartTime,
             outcome,
             invocation,
           } as WaitingToolCall;
+        }
         case 'scheduled':
           return {
             request: currentCall.request,
@@ -701,7 +711,7 @@ export class CoreToolScheduler {
               reqInfo.callId,
               'awaiting_approval',
               signal,
-              wrappedConfirmationDetails,
+              { confirmationDetails: wrappedConfirmationDetails, correlationId: randomUUID() },
             );
           }
         }
@@ -762,9 +772,12 @@ export class CoreToolScheduler {
       }
 
       this.setStatusInternal(callId, 'awaiting_approval', signal, {
-        ...waitingToolCall.confirmationDetails,
-        isModifying: true,
-      } as ToolCallConfirmationDetails);
+        confirmationDetails: {
+          ...waitingToolCall.confirmationDetails,
+          isModifying: true,
+        },
+        correlationId: waitingToolCall.correlationId,
+      });
 
       const result = await this.toolModifier.handleModifyWithEditor(
         waitingToolCall,
@@ -776,15 +789,21 @@ export class CoreToolScheduler {
       if (result) {
         this.setArgsInternal(callId, result.updatedParams);
         this.setStatusInternal(callId, 'awaiting_approval', signal, {
-          ...waitingToolCall.confirmationDetails,
-          fileDiff: result.updatedDiff,
-          isModifying: false,
-        } as ToolCallConfirmationDetails);
+          confirmationDetails: {
+            ...waitingToolCall.confirmationDetails,
+            fileDiff: result.updatedDiff,
+            isModifying: false,
+          },
+          correlationId: waitingToolCall.correlationId,
+        });
       } else {
         this.setStatusInternal(callId, 'awaiting_approval', signal, {
-          ...waitingToolCall.confirmationDetails,
-          isModifying: false,
-        } as ToolCallConfirmationDetails);
+          confirmationDetails: {
+            ...waitingToolCall.confirmationDetails,
+            isModifying: false,
+          },
+          correlationId: waitingToolCall.correlationId,
+        });
       }
     } else {
       // If the client provided new content, apply it and wait for
@@ -798,9 +817,12 @@ export class CoreToolScheduler {
         if (result) {
           this.setArgsInternal(callId, result.updatedParams);
           this.setStatusInternal(callId, 'awaiting_approval', signal, {
-            ...(toolCall as WaitingToolCall).confirmationDetails,
-            fileDiff: result.updatedDiff,
-          } as ToolCallConfirmationDetails);
+            confirmationDetails: {
+              ...(toolCall as WaitingToolCall).confirmationDetails,
+              fileDiff: result.updatedDiff,
+            },
+            correlationId: (toolCall as WaitingToolCall).correlationId,
+          });
           // After an inline modification, wait for another user confirmation.
           return;
         }

@@ -387,6 +387,7 @@ describe('useGeminiStream', () => {
       callId,
       name: toolName,
       args: {},
+    correlationId: 'test-correlation-id',
       isClientInitiated: false,
       prompt_id: 'prompt-id-1',
     },
@@ -1292,6 +1293,7 @@ describe('useGeminiStream', () => {
             prompt_id: 'prompt-id-1',
           },
           status: 'awaiting_approval',
+          correlationId: 'test-correlation-id',
           responseSubmittedToGemini: false,
           tool: {
             name: 'some_tool',
@@ -1827,6 +1829,7 @@ describe('useGeminiStream', () => {
             prompt_id: 'prompt-id-1',
           },
           status: 'awaiting_approval',
+          correlationId: 'test-correlation-id',
           responseSubmittedToGemini: false,
           // No confirmationDetails
           tool: {
@@ -1860,6 +1863,7 @@ describe('useGeminiStream', () => {
             prompt_id: 'prompt-id-1',
           },
           status: 'awaiting_approval',
+          correlationId: 'test-correlation-id',
           responseSubmittedToGemini: false,
           confirmationDetails: {
             type: 'edit',
@@ -1905,6 +1909,7 @@ describe('useGeminiStream', () => {
             prompt_id: 'prompt-id-1',
           },
           status: 'awaiting_approval',
+          correlationId: 'test-correlation-id',
           responseSubmittedToGemini: false,
           confirmationDetails: {
             type: 'edit',
