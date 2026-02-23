@@ -74,6 +74,7 @@ export class SubagentToolWrapper extends BaseDeclarativeTool<
         definition,
         params,
         effectiveMessageBus,
+        this.config.getA2AClientManager(),
         _toolName,
         _toolDisplayName,
       );

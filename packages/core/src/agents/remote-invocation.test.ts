@@ -18,13 +18,7 @@ import { A2AClientManager } from './a2a-client-manager.js';
 import type { RemoteAgentDefinition } from './types.js';
 import { createMockMessageBus } from '../test-utils/mock-message-bus.js';
 
-// Mock A2AClientManager
-vi.mock('./a2a-client-manager.js', () => {
-  const A2AClientManager = {
-    getInstance: vi.fn(),
-  };
-  return { A2AClientManager };
-});
+
 
 describe('RemoteAgentInvocation', () => {
   const mockDefinition: RemoteAgentDefinition = {
@@ -47,7 +41,6 @@ describe('RemoteAgentInvocation', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (A2AClientManager.getInstance as Mock).mockReturnValue(mockClientManager);
     (
       RemoteAgentInvocation as unknown as {
         sessionState?: Map<string, { contextId?: string; taskId?: string }>;
@@ -66,13 +59,14 @@ describe('RemoteAgentInvocation', () => {
           mockDefinition,
           { query: 'valid' },
           mockMessageBus,
+          mockClientManager as unknown as A2AClientManager,
         );
       }).not.toThrow();
     });
 
     it('accepts missing query (defaults to "Get Started!")', () => {
       expect(() => {
-        new RemoteAgentInvocation(mockDefinition, {}, mockMessageBus);
+        new RemoteAgentInvocation(mockDefinition, {}, mockMessageBus, mockClientManager as unknown as A2AClientManager);
       }).not.toThrow();
     });
 
@@ -89,6 +83,7 @@ describe('RemoteAgentInvocation', () => {
         mockDefinition,
         {},
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       await invocation.execute(new AbortController().signal);
 
@@ -105,6 +100,7 @@ describe('RemoteAgentInvocation', () => {
           mockDefinition,
           { query: 123 },
           mockMessageBus,
+          mockClientManager as unknown as A2AClientManager,
         );
       }).toThrow("requires a string 'query' input");
     });
@@ -126,6 +122,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'hi',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       await invocation.execute(new AbortController().signal);
 
@@ -154,6 +151,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'hi',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       await invocation.execute(new AbortController().signal);
 
@@ -179,6 +177,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'first',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
 
       // Execute first time
@@ -206,6 +205,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'second',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       const result2 = await invocation2.execute(new AbortController().signal);
       expect(result2.returnDisplay).toBe('Response 2');
@@ -232,6 +232,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'third',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       await invocation3.execute(new AbortController().signal);
 
@@ -249,6 +250,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'fourth',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       await invocation4.execute(new AbortController().signal);
 
@@ -271,6 +273,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'hi',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       const result = await invocation.execute(new AbortController().signal);
 
@@ -298,6 +301,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'hi',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       const result = await invocation.execute(new AbortController().signal);
 
@@ -314,6 +318,7 @@ describe('RemoteAgentInvocation', () => {
           query: 'hi',
         },
         mockMessageBus,
+        mockClientManager as unknown as A2AClientManager,
       );
       // @ts-expect-error - getConfirmationDetails is protected
       const confirmation = await invocation.getConfirmationDetails(
