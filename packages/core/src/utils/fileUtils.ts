@@ -358,17 +358,21 @@ export async function processSingleFileContent(
   limit?: number,
 ): Promise<ProcessedFileReadResult> {
   try {
-    if (!fs.existsSync(filePath)) {
-      // Sync check is acceptable before async read
-      return {
-        llmContent:
-          'Could not read file because no file was found at the specified path.',
-        returnDisplay: 'File not found.',
-        error: `File not found: ${filePath}`,
-        errorType: ToolErrorType.FILE_NOT_FOUND,
-      };
+    let stats: fs.Stats;
+    try {
+      stats = await fs.promises.stat(filePath);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return {
+          llmContent:
+            'Could not read file because no file was found at the specified path.',
+          returnDisplay: 'File not found.',
+          error: `File not found: ${filePath}`,
+          errorType: ToolErrorType.FILE_NOT_FOUND,
+        };
+      }
+      throw error;
     }
-    const stats = await fs.promises.stat(filePath);
     if (stats.isDirectory()) {
       return {
         llmContent:
