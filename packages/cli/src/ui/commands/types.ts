@@ -217,4 +217,5 @@ export interface SlashCommand {
   showCompletionLoading?: boolean;
 
   subCommands?: SlashCommand[];
+  subCommandsMap?: Map<string, SlashCommand>;
 }

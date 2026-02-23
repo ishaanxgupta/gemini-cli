@@ -9,6 +9,32 @@ import type { SlashCommand } from '../ui/commands/types.js';
 import type { ICommandLoader } from './types.js';
 
 /**
+ * Creates a lookup map for a list of commands, indexing them by name and aliases.
+ */
+function createLookupMap(
+  commands: readonly SlashCommand[],
+): Map<string, SlashCommand> {
+  const map = new Map<string, SlashCommand>();
+  // First pass: add commands by their primary name.
+  for (const cmd of commands) {
+    if (!map.has(cmd.name)) {
+      map.set(cmd.name, cmd);
+    }
+  }
+  // Second pass: add commands by their aliases.
+  for (const cmd of commands) {
+    if (cmd.altNames) {
+      for (const alias of cmd.altNames) {
+        if (!map.has(alias)) {
+          map.set(alias, cmd);
+        }
+      }
+    }
+  }
+  return map;
+}
+
+/**
  * Orchestrates the discovery and loading of all slash commands for the CLI.
  *
  * This service operates on a provider-based loader pattern. It is initialized
@@ -23,8 +49,12 @@ export class CommandService {
   /**
    * Private constructor to enforce the use of the async factory.
    * @param commands A readonly array of the fully loaded and de-duplicated commands.
+   * @param commandMap A lookup map for efficient command resolution.
    */
-  private constructor(private readonly commands: readonly SlashCommand[]) {}
+  private constructor(
+    private readonly commands: readonly SlashCommand[],
+    private readonly commandMap: Map<string, SlashCommand>,
+  ) {}
 
   /**
    * Asynchronously creates and initializes a new CommandService instance.
@@ -86,8 +116,26 @@ export class CommandService {
       });
     }
 
-    const finalCommands = Object.freeze(Array.from(commandMap.values()));
-    return new CommandService(finalCommands);
+    const enrichCommand = (cmd: SlashCommand): SlashCommand => {
+      let newSubCommands = cmd.subCommands;
+      let subMap: Map<string, SlashCommand> | undefined;
+
+      if (cmd.subCommands && cmd.subCommands.length > 0) {
+        newSubCommands = cmd.subCommands.map(enrichCommand);
+        subMap = createLookupMap(newSubCommands);
+      }
+
+      if (subMap) {
+        return { ...cmd, subCommands: newSubCommands, subCommandsMap: subMap };
+      }
+      return cmd;
+    };
+
+    const enrichedCommands = Array.from(commandMap.values()).map(enrichCommand);
+    const finalCommands = Object.freeze(enrichedCommands);
+    const rootMap = createLookupMap(finalCommands);
+
+    return new CommandService(finalCommands, rootMap);
   }
 
   /**
@@ -100,5 +148,14 @@ export class CommandService {
    */
   getCommands(): readonly SlashCommand[] {
     return this.commands;
+  }
+
+  /**
+   * Retrieves the lookup map for top-level commands.
+   *
+   * @returns A map of command names and aliases to SlashCommand objects.
+   */
+  getCommandMap(): Map<string, SlashCommand> {
+    return this.commandMap;
   }
 }

@@ -138,3 +138,69 @@ describe('parseSlashCommand', () => {
     expect(result.canonicalPath).toEqual([]);
   });
 });
+
+// Helper to create map for tests (duplicate of CommandService logic for verification)
+function createLookupMap(
+  commands: readonly SlashCommand[],
+): Map<string, SlashCommand> {
+  const map = new Map<string, SlashCommand>();
+  for (const cmd of commands) {
+    if (!map.has(cmd.name)) map.set(cmd.name, cmd);
+  }
+  for (const cmd of commands) {
+    if (cmd.altNames) {
+      for (const alias of cmd.altNames) {
+        if (!map.has(alias)) map.set(alias, cmd);
+      }
+    }
+  }
+  return map;
+}
+
+// Recursive function to attach maps for testing
+function enrichCommands(commands: readonly SlashCommand[]): SlashCommand[] {
+  return commands.map((cmd) => {
+    if (cmd.subCommands) {
+      const enrichedSub = enrichCommands(cmd.subCommands);
+      const subMap = createLookupMap(enrichedSub);
+      return { ...cmd, subCommands: enrichedSub, subCommandsMap: subMap };
+    }
+    return cmd;
+  });
+}
+
+const enrichedMockCommands = enrichCommands(mockCommands);
+const mockRootMap = createLookupMap(enrichedMockCommands);
+
+describe('parseSlashCommand with optimization', () => {
+  it('should parse a subcommand with map lookup', () => {
+    const result = parseSlashCommand(
+      '/memory add',
+      enrichedMockCommands,
+      mockRootMap,
+    );
+    expect(result.commandToExecute?.name).toBe('add');
+    expect(result.canonicalPath).toEqual(['memory', 'add']);
+  });
+
+  it('should handle a command alias with map lookup', () => {
+    const result = parseSlashCommand(
+      '/mem add some data',
+      enrichedMockCommands,
+      mockRootMap,
+    );
+    expect(result.commandToExecute?.name).toBe('add');
+    expect(result.args).toBe('some data');
+    expect(result.canonicalPath).toEqual(['memory', 'add']);
+  });
+
+  it('should handle a subcommand alias with map lookup', () => {
+    const result = parseSlashCommand(
+      '/memory c',
+      enrichedMockCommands,
+      mockRootMap,
+    );
+    expect(result.commandToExecute?.name).toBe('clear');
+    expect(result.canonicalPath).toEqual(['memory', 'clear']);
+  });
+});
