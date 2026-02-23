@@ -100,6 +100,7 @@ import type { FetchAdminControlsResponse } from '../code_assist/types.js';
 import { getCodeAssistServer } from '../code_assist/codeAssist.js';
 import type { Experiments } from '../code_assist/experiments/experiments.js';
 import { AgentRegistry } from '../agents/registry.js';
+import { A2AClientManager } from '../agents/a2a-client-manager.js';
 import { setGlobalProxy } from '../utils/fetch.js';
 import { SubagentTool } from '../agents/subagent-tool.js';
 import { getExperiments } from '../code_assist/experiments/experiments.js';
@@ -416,6 +417,7 @@ export class Config {
   private promptRegistry!: PromptRegistry;
   private resourceRegistry!: ResourceRegistry;
   private agentRegistry!: AgentRegistry;
+  private readonly a2aClientManager = A2AClientManager.getInstance();
   private skillManager!: SkillManager;
   private sessionId: string;
   private clientVersion: string;
@@ -1136,6 +1138,10 @@ export class Config {
 
   getAgentRegistry(): AgentRegistry {
     return this.agentRegistry;
+  }
+
+  getA2AClientManager(): A2AClientManager {
+    return this.a2aClientManager;
   }
 
   getToolRegistry(): ToolRegistry {
