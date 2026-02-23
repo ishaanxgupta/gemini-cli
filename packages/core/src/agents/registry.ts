@@ -65,7 +65,7 @@ export class AgentRegistry {
    * Clears the current registry and re-scans for agents.
    */
   async reload(): Promise<void> {
-    A2AClientManager.getInstance().clearCache();
+    this.config.getA2AClientManager().clearCache();
     await this.config.reloadAgents();
     this.agents.clear();
     this.allDefinitions.clear();
@@ -265,7 +265,7 @@ export class AgentRegistry {
 
     // Log remote A2A agent registration for visibility.
     try {
-      const clientManager = A2AClientManager.getInstance();
+      const clientManager = this.config.getA2AClientManager();
       // Use ADCHandler to ensure we can load agents hosted on secure platforms (e.g. Vertex AI)
       const authHandler = new ADCHandler();
       const agentCard = await clientManager.loadAgent(

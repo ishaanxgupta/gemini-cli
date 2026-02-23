@@ -65,14 +65,14 @@ describe('RemoteAgentInvocation', () => {
         new RemoteAgentInvocation(
           mockDefinition,
           { query: 'valid' },
-          mockMessageBus,
+          mockMessageBus, mockClientManager as any,
         );
       }).not.toThrow();
     });
 
     it('accepts missing query (defaults to "Get Started!")', () => {
       expect(() => {
-        new RemoteAgentInvocation(mockDefinition, {}, mockMessageBus);
+        new RemoteAgentInvocation(mockDefinition, {}, mockMessageBus, mockClientManager as any);
       }).not.toThrow();
     });
 
@@ -88,7 +88,7 @@ describe('RemoteAgentInvocation', () => {
       const invocation = new RemoteAgentInvocation(
         mockDefinition,
         {},
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       await invocation.execute(new AbortController().signal);
 
@@ -104,7 +104,7 @@ describe('RemoteAgentInvocation', () => {
         new RemoteAgentInvocation(
           mockDefinition,
           { query: 123 },
-          mockMessageBus,
+          mockMessageBus, mockClientManager as any,
         );
       }).toThrow("requires a string 'query' input");
     });
@@ -125,7 +125,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'hi',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       await invocation.execute(new AbortController().signal);
 
@@ -153,7 +153,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'hi',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       await invocation.execute(new AbortController().signal);
 
@@ -178,7 +178,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'first',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
 
       // Execute first time
@@ -205,7 +205,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'second',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       const result2 = await invocation2.execute(new AbortController().signal);
       expect(result2.returnDisplay).toBe('Response 2');
@@ -231,7 +231,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'third',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       await invocation3.execute(new AbortController().signal);
 
@@ -248,7 +248,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'fourth',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       await invocation4.execute(new AbortController().signal);
 
@@ -270,7 +270,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'hi',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       const result = await invocation.execute(new AbortController().signal);
 
@@ -297,7 +297,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'hi',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       const result = await invocation.execute(new AbortController().signal);
 
@@ -313,7 +313,7 @@ describe('RemoteAgentInvocation', () => {
         {
           query: 'hi',
         },
-        mockMessageBus,
+        mockMessageBus, mockClientManager as any,
       );
       // @ts-expect-error - getConfirmationDetails is protected
       const confirmation = await invocation.getConfirmationDetails(

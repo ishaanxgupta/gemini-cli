@@ -73,7 +73,7 @@ export class SubagentToolWrapper extends BaseDeclarativeTool<
       return new RemoteAgentInvocation(
         definition,
         params,
-        effectiveMessageBus,
+        effectiveMessageBus, this.config.getA2AClientManager(),
         _toolName,
         _toolDisplayName,
       );
