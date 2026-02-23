@@ -109,8 +109,8 @@ export type WaitingToolCall = {
   confirmationDetails:
     | ToolCallConfirmationDetails
     | SerializableConfirmationDetails;
-  // TODO: Make required after migration.
-  correlationId?: string;
+
+  correlationId: string;
   startTime?: number;
   outcome?: ToolConfirmationOutcome;
 };

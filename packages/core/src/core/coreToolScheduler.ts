@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { randomUUID } from 'node:crypto';
 import {
   type ToolResultDisplay,
   type AnyDeclarativeTool,
@@ -249,6 +250,7 @@ export class CoreToolScheduler {
             request: currentCall.request,
             tool: toolInstance,
             status: 'awaiting_approval',
+            correlationId: randomUUID(),
             confirmationDetails: auxiliaryData as ToolCallConfirmationDetails,
             startTime: existingStartTime,
             outcome,
