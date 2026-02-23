@@ -21,7 +21,6 @@ import type {
   ToolConfirmationOutcome,
   ToolResultDisplay,
   AnyToolInvocation,
-  ToolCallConfirmationDetails,
   AnyDeclarativeTool,
 } from '../tools/tools.js';
 import type { MessageBus } from '../confirmation-bus/message-bus.js';
@@ -99,12 +98,10 @@ export class SchedulerStateManager {
   updateStatus(
     callId: string,
     status: 'awaiting_approval',
-    data:
-      | ToolCallConfirmationDetails
-      | {
-          correlationId: string;
-          confirmationDetails: SerializableConfirmationDetails;
-        },
+    data: {
+      correlationId: string;
+      confirmationDetails: SerializableConfirmationDetails;
+    },
   ): void;
   updateStatus(callId: string, status: 'cancelled', data: string): void;
   updateStatus(
@@ -342,18 +339,12 @@ export class SchedulerStateManager {
   private toAwaitingApproval(call: ToolCall, data: unknown): WaitingToolCall {
     this.validateHasToolAndInvocation(call, 'awaiting_approval');
 
-    let confirmationDetails:
-      | ToolCallConfirmationDetails
-      | SerializableConfirmationDetails;
-    let correlationId: string | undefined;
-
-    if (this.isEventDrivenApprovalData(data)) {
-      correlationId = data.correlationId;
-      confirmationDetails = data.confirmationDetails;
-    } else {
-      // TODO: Remove legacy callback shape once event-driven migration is complete
-      confirmationDetails = data as ToolCallConfirmationDetails;
+    if (!this.isEventDrivenApprovalData(data)) {
+      throw new Error(
+        `Invalid data for 'awaiting_approval' transition (callId: ${call.request.callId})`,
+      );
     }
+    const { correlationId, confirmationDetails } = data;
 
     return {
       request: call.request,
