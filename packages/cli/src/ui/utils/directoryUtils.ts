@@ -6,7 +6,7 @@
 
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-import { opendir } from 'node:fs/promises';
+import { opendir, stat } from 'node:fs/promises';
 import { homedir, type WorkspaceContext } from '@google/gemini-cli-core';
 
 const MAX_SUGGESTIONS = 50;
@@ -97,7 +97,12 @@ export async function getDirectorySuggestions(
   try {
     const { searchDir, filter, resultPrefix } = parsePartialPath(partialPath);
 
-    if (!fs.existsSync(searchDir) || !fs.statSync(searchDir).isDirectory()) {
+    try {
+      const stats = await stat(searchDir);
+      if (!stats.isDirectory()) {
+        return [];
+      }
+    } catch {
       return [];
     }
 
