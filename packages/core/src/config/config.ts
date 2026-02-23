@@ -218,6 +218,7 @@ import {
 import { McpClientManager } from '../tools/mcp-client-manager.js';
 import type { EnvironmentSanitizationConfig } from '../services/environmentSanitization.js';
 import { getErrorMessage } from '../utils/errors.js';
+import { A2AClientManager } from '../agents/a2a-client-manager.js';
 
 export type { FileFilteringOptions };
 export {
@@ -406,6 +407,7 @@ export interface ConfigParameters {
 }
 
 export class Config {
+  private readonly a2aClientManager = A2AClientManager.getInstance();
   private toolRegistry!: ToolRegistry;
   private mcpClientManager?: McpClientManager;
   private allowedMcpServers: string[];
@@ -2062,6 +2064,11 @@ export class Config {
   /**
    * Get experiments configuration
    */
+
+  getA2AClientManager(): A2AClientManager {
+    return this.a2aClientManager;
+  }
+
   getExperiments(): Experiments | undefined {
     return this.experiments;
   }
