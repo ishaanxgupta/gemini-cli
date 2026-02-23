@@ -87,6 +87,7 @@ they appear in the UI.
 | Respect .geminiignore                | `context.fileFiltering.respectGeminiIgnore`       | Respect .geminiignore files when searching.                                                                                                     | `true`  |
 | Enable Recursive File Search         | `context.fileFiltering.enableRecursiveFileSearch` | Enable recursive file search functionality when completing @ references in the prompt.                                                          | `true`  |
 | Enable Fuzzy Search                  | `context.fileFiltering.enableFuzzySearch`         | Enable fuzzy search when searching for files.                                                                                                   | `true`  |
+| Ignore Patterns                      | `context.fileFiltering.ignorePatterns`            | List of glob patterns to ignore.                                                                                                                | `[]`    |
 
 ### Tools
 

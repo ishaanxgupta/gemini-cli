@@ -1023,6 +1023,16 @@
               "markdownDescription": "Enable fuzzy search when searching for files.\n\n- Category: `Context`\n- Requires restart: `yes`\n- Default: `true`",
               "default": true,
               "type": "boolean"
+            },
+            "ignorePatterns": {
+              "title": "Ignore Patterns",
+              "description": "List of glob patterns to ignore.",
+              "markdownDescription": "List of glob patterns to ignore.\n\n- Category: `Context`\n- Requires restart: `yes`\n- Default: `[]`",
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "additionalProperties": false
