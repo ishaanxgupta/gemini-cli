@@ -386,14 +386,16 @@ ${finalExclusionPatternsForDescription
       displayMessage += `Successfully read and concatenated content from **${processedFilesRelativePaths.length} file(s)**.\n`;
       if (processedFilesRelativePaths.length <= 10) {
         displayMessage += `\n**Processed Files:**\n`;
-        processedFilesRelativePaths.forEach(
-          (p) => (displayMessage += `- \`${p}\`\n`),
-        );
+        displayMessage +=
+          processedFilesRelativePaths.map((p) => `- \`${p}\``).join('\n') +
+          '\n';
       } else {
         displayMessage += `\n**Processed Files (first 10 shown):**\n`;
-        processedFilesRelativePaths
-          .slice(0, 10)
-          .forEach((p) => (displayMessage += `- \`${p}\`\n`));
+        displayMessage +=
+          processedFilesRelativePaths
+            .slice(0, 10)
+            .map((p) => `- \`${p}\``)
+            .join('\n') + '\n';
         displayMessage += `- ...and ${processedFilesRelativePaths.length - 10} more.\n`;
       }
     }
