@@ -323,6 +323,7 @@ export interface ConfigParameters {
     enableFuzzySearch?: boolean;
     maxFileCount?: number;
     searchTimeout?: number;
+    excludePatterns?: string[];
   };
   checkpointing?: boolean;
   proxy?: string;
@@ -458,6 +459,7 @@ export class Config {
     enableFuzzySearch: boolean;
     maxFileCount: number;
     searchTimeout: number;
+    excludePatterns?: string[];
   };
   private fileDiscoveryService: FileDiscoveryService | null = null;
   private gitService: GitService | undefined = undefined;
@@ -622,6 +624,7 @@ export class Config {
         params.fileFiltering?.searchTimeout ??
         DEFAULT_FILE_FILTERING_OPTIONS.searchTimeout ??
         5000,
+      excludePatterns: params.fileFiltering?.excludePatterns,
     };
     this.checkpointing = params.checkpointing ?? false;
     this.proxy = params.proxy;
@@ -1508,6 +1511,7 @@ export class Config {
       respectGeminiIgnore: this.fileFiltering.respectGeminiIgnore,
       maxFileCount: this.fileFiltering.maxFileCount,
       searchTimeout: this.fileFiltering.searchTimeout,
+      excludePatterns: this.fileFiltering.excludePatterns,
     };
   }
 
@@ -1517,13 +1521,7 @@ export class Config {
    * read from settings files, CLI arguments, or environment variables.
    */
   getCustomExcludes(): string[] {
-    // Placeholder implementation - returns empty array for now
-    // Future implementation could read from:
-    // - User settings file
-    // - Project-specific configuration
-    // - Environment variables
-    // - CLI arguments
-    return [];
+    return this.fileFiltering.excludePatterns ?? [];
   }
 
   getCheckpointingEnabled(): boolean {
