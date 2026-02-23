@@ -4,12 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { expandHomeDir, getDirectorySuggestions } from './directoryUtils.js';
-import type * as osActual from 'node:os';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as fsPromises from 'node:fs/promises';
+import * as os from 'node:os';
+import {
+  expandHomeDir,
+  getDirectorySuggestions,
+} from './directoryUtils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// Mock dependencies
+const osActual = await vi.importActual<typeof import('node:os')>('node:os');
 
 vi.mock('@google/gemini-cli-core', async (importOriginal) => {
   const original =
@@ -40,6 +46,7 @@ vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
   return {
     ...actual,
+    // Keep these mocked just in case, but they shouldn't be called
     existsSync: vi.fn(),
     statSync: vi.fn(),
   };
@@ -47,6 +54,7 @@ vi.mock('node:fs', async (importOriginal) => {
 
 vi.mock('node:fs/promises', () => ({
   opendir: vi.fn(),
+  stat: vi.fn(),
 }));
 
 interface MockDirent {
@@ -110,8 +118,7 @@ describe('directoryUtils', () => {
 
   describe('getDirectorySuggestions', () => {
     it('should return suggestions for an empty path', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -127,8 +134,7 @@ describe('directoryUtils', () => {
     });
 
     it('should return suggestions for a partial path', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -143,8 +149,7 @@ describe('directoryUtils', () => {
     });
 
     it('should return suggestions for a path with trailing slash', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -158,8 +163,7 @@ describe('directoryUtils', () => {
     });
 
     it('should return suggestions for a path with ~', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -173,8 +177,7 @@ describe('directoryUtils', () => {
     });
 
     it('should return suggestions for a partial path with ~', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -188,8 +191,7 @@ describe('directoryUtils', () => {
     });
 
     it('should return suggestions for ../', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -203,8 +205,7 @@ describe('directoryUtils', () => {
     });
 
     it('should ignore hidden directories', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -219,8 +220,7 @@ describe('directoryUtils', () => {
     });
 
     it('should show hidden directories when filter starts with .', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
       vi.mocked(fsPromises.opendir).mockResolvedValue(
@@ -237,14 +237,13 @@ describe('directoryUtils', () => {
     });
 
     it('should return empty array if directory does not exist', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(false);
+      vi.mocked(fsPromises.stat).mockRejectedValue(new Error('ENOENT'));
       const suggestions = await getDirectorySuggestions('nonexistent/');
       expect(suggestions).toEqual([]);
     });
 
     it('should limit results to 50 suggestions', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
 
@@ -263,8 +262,7 @@ describe('directoryUtils', () => {
     });
 
     it('should terminate early after 150 matches for performance', async () => {
-      vi.mocked(fs.existsSync).mockReturnValue(true);
-      vi.mocked(fs.statSync).mockReturnValue({
+      vi.mocked(fsPromises.stat).mockResolvedValue({
         isDirectory: () => true,
       } as fs.Stats);
 
@@ -290,8 +288,7 @@ describe('directoryUtils', () => {
     'getDirectorySuggestions (Windows)',
     () => {
       it('should handle %userprofile% expansion', async () => {
-        vi.mocked(fs.existsSync).mockReturnValue(true);
-        vi.mocked(fs.statSync).mockReturnValue({
+        vi.mocked(fsPromises.stat).mockResolvedValue({
           isDirectory: () => true,
         } as fs.Stats);
         vi.mocked(fsPromises.opendir).mockResolvedValue(
