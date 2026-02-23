@@ -236,14 +236,12 @@ describe('SchedulerStateManager', () => {
         type: 'info' as const,
         title: 'Confirm',
         prompt: 'Proceed?',
-        onConfirm: vi.fn(),
       };
 
-      stateManager.updateStatus(
-        call.request.callId,
-        'awaiting_approval',
-        details,
-      );
+      stateManager.updateStatus(call.request.callId, 'awaiting_approval', {
+        correlationId: '123',
+        confirmationDetails: details,
+      });
 
       const active = stateManager.firstActiveCall as WaitingToolCall;
       expect(active.status).toBe('awaiting_approval');
@@ -290,14 +288,12 @@ describe('SchedulerStateManager', () => {
         fileDiff: 'diff',
         originalContent: 'old',
         newContent: 'new',
-        onConfirm: vi.fn(),
       };
 
-      stateManager.updateStatus(
-        call.request.callId,
-        'awaiting_approval',
-        details,
-      );
+      stateManager.updateStatus(call.request.callId, 'awaiting_approval', {
+        correlationId: '123',
+        confirmationDetails: details,
+      });
       stateManager.updateStatus(
         call.request.callId,
         'cancelled',
