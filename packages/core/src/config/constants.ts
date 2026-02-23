@@ -9,6 +9,7 @@ export interface FileFilteringOptions {
   respectGeminiIgnore: boolean;
   maxFileCount?: number;
   searchTimeout?: number;
+  ignorePatterns?: string[];
 }
 
 // For memory files

@@ -2232,3 +2232,30 @@ describe('Config JIT Initialization', () => {
     });
   });
 });
+
+describe('Config File Filtering', () => {
+  it('should return empty array for custom excludes by default', () => {
+    const config = new Config({
+      sessionId: 'test-session',
+      targetDir: '/tmp/test',
+      debugMode: false,
+      model: 'test-model',
+      cwd: '/tmp/test',
+    });
+    expect(config.getCustomExcludes()).toEqual([]);
+  });
+
+  it('should return custom excludes from params', () => {
+    const config = new Config({
+      sessionId: 'test-session',
+      targetDir: '/tmp/test',
+      debugMode: false,
+      model: 'test-model',
+      cwd: '/tmp/test',
+      fileFiltering: {
+        ignorePatterns: ['**/custom/**'],
+      },
+    });
+    expect(config.getCustomExcludes()).toEqual(['**/custom/**']);
+  });
+});
