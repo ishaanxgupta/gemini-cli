@@ -47,6 +47,7 @@ function createMockWaitingToolCall(
     } as ToolCallRequestInfo,
     tool: new MockTool({ name: 'test-tool' }),
     invocation: {} as ToolInvocation<Record<string, unknown>, ToolResult>, // We generally don't check invocation details in these tests
+    correlationId: 'test-correlation-id',
     confirmationDetails: {
       type: 'edit',
       title: 'Test Confirmation',
@@ -130,6 +131,7 @@ describe('ToolModificationHandler', () => {
           isClientInitiated: false,
           prompt_id: 'p1',
         },
+    correlationId: 'test-correlation-id',
         confirmationDetails: {
           type: 'edit',
           title: 'Confirm',
