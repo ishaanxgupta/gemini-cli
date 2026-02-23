@@ -622,7 +622,26 @@ describe('Server Config (config.ts)', () => {
     expect(config.getFileFilteringRespectGitIgnore()).toBe(false);
   });
 
-  it('should initialize WorkspaceContext with includeDirectories', () => {
+
+  it('should set custom exclude patterns when provided', () => {
+    const paramsWithExcludePatterns: ConfigParameters = {
+      ...baseParams,
+      fileFiltering: {
+        excludePatterns: ['**/*.log', 'tmp/'],
+      },
+    };
+    const config = new Config(paramsWithExcludePatterns);
+    expect(config.getCustomExcludes()).toEqual(['**/*.log', 'tmp/']);
+    expect(config.getFileFilteringOptions().excludePatterns).toEqual(['**/*.log', 'tmp/']);
+  });
+
+  it('should return empty array for custom excludes when not provided', () => {
+    const config = new Config(baseParams);
+    expect(config.getCustomExcludes()).toEqual([]);
+    expect(config.getFileFilteringOptions().excludePatterns).toBeUndefined();
+  });
+
+it('should initialize WorkspaceContext with includeDirectories', () => {
     const includeDirectories = ['dir1', 'dir2'];
     const paramsWithIncludeDirs: ConfigParameters = {
       ...baseParams,
@@ -709,7 +728,7 @@ describe('Server Config (config.ts)', () => {
     });
 
     it.each([{ enabled: true }, { enabled: false }])(
-      'sets usage statistics based on the provided value (enabled: $enabled)',
+      'sets usage statistics based on the provided value (enabled: )',
       ({ enabled }) => {
         const config = new Config({
           ...baseParams,

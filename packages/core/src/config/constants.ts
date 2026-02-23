@@ -8,6 +8,7 @@ export interface FileFilteringOptions {
   respectGitIgnore: boolean;
   respectGeminiIgnore: boolean;
   maxFileCount?: number;
+  excludePatterns?: string[];
   searchTimeout?: number;
 }
 
