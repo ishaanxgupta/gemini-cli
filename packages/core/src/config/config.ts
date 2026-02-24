@@ -129,6 +129,7 @@ export interface SummarizeToolOutputSettings {
 
 export interface TelemetrySettings {
   enabled?: boolean;
+  performanceMonitoringEnabled?: boolean;
   target?: TelemetryTarget;
   otlpEndpoint?: string;
   otlpProtocol?: 'grpc' | 'http';
@@ -594,6 +595,8 @@ export class Config {
     this.accessibility = params.accessibility ?? {};
     this.telemetrySettings = {
       enabled: params.telemetry?.enabled ?? false,
+      performanceMonitoringEnabled:
+        params.telemetry?.performanceMonitoringEnabled,
       target: params.telemetry?.target ?? DEFAULT_TELEMETRY_TARGET,
       otlpEndpoint: params.telemetry?.otlpEndpoint ?? DEFAULT_OTLP_ENDPOINT,
       otlpProtocol: params.telemetry?.otlpProtocol,
@@ -1434,6 +1437,13 @@ export class Config {
 
   getTelemetryEnabled(): boolean {
     return this.telemetrySettings.enabled ?? false;
+  }
+
+  getPerformanceMonitoringEnabled(): boolean {
+    return (
+      this.telemetrySettings.performanceMonitoringEnabled ??
+      this.getTelemetryEnabled()
+    );
   }
 
   getTelemetryLogPromptsEnabled(): boolean {

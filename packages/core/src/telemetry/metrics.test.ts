@@ -222,6 +222,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     it('should apply common attributes including email', () => {
@@ -270,6 +271,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     it('should not record metrics if not initialized', () => {
@@ -313,6 +315,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     it('should not record lines added/removed if not initialized', () => {
@@ -360,6 +363,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     type FileOperationTestCase = {
@@ -444,6 +448,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     it('should not record metrics if not initialized', () => {
@@ -525,6 +530,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     it('should not record metrics if not initialized', () => {
@@ -585,6 +591,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     describe('recordGenAiClientTokenUsage', () => {
@@ -775,6 +782,7 @@ describe('Telemetry Metrics', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
       getTelemetryEnabled: () => true,
+      getPerformanceMonitoringEnabled: () => true,
     } as unknown as Config;
 
     describe('recordStartupPerformance', () => {
@@ -783,6 +791,7 @@ describe('Telemetry Metrics', () => {
         const mockConfigDisabled = {
           getSessionId: () => 'test-session-id',
           getTelemetryEnabled: () => false, // Disable telemetry to disable performance monitoring
+          getPerformanceMonitoringEnabled: () => false,
         } as unknown as Config;
 
         initializeMetricsModule(mockConfigDisabled);

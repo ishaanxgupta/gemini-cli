@@ -1979,6 +1979,11 @@ export const SETTINGS_SCHEMA_DEFINITIONS: Record<
         type: 'boolean',
         description: 'Enables telemetry emission.',
       },
+      performanceMonitoringEnabled: {
+        type: 'boolean',
+        description:
+          'Enables performance monitoring (defaults to telemetry enabled setting).',
+      },
       target: {
         type: 'string',
         description:
