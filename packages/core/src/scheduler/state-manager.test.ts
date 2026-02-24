@@ -239,15 +239,20 @@ describe('SchedulerStateManager', () => {
         onConfirm: vi.fn(),
       };
 
+      const correlationId = 'test-correlation-id';
       stateManager.updateStatus(
         call.request.callId,
         'awaiting_approval',
-        details,
+        {
+          correlationId,
+          confirmationDetails: details,
+        },
       );
 
       const active = stateManager.firstActiveCall as WaitingToolCall;
       expect(active.status).toBe('awaiting_approval');
       expect(active.confirmationDetails).toEqual(details);
+      expect(active.correlationId).toBe(correlationId);
     });
 
     it('should transition to awaiting_approval with event-driven format', () => {
@@ -296,7 +301,10 @@ describe('SchedulerStateManager', () => {
       stateManager.updateStatus(
         call.request.callId,
         'awaiting_approval',
-        details,
+        {
+          correlationId: 'test-correlation-id',
+          confirmationDetails: details,
+        },
       );
       stateManager.updateStatus(
         call.request.callId,
