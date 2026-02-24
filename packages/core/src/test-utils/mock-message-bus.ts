@@ -7,6 +7,7 @@
 import { vi } from 'vitest';
 import type { MessageBus } from '../confirmation-bus/message-bus.js';
 import { MessageBusType, type Message } from '../confirmation-bus/types.js';
+import { ToolConfirmationOutcome } from '../tools/tools.js';
 
 /**
  * Mock MessageBus for testing hook execution through MessageBus
@@ -32,12 +33,14 @@ export class MockMessageBus {
           type: MessageBusType.TOOL_CONFIRMATION_RESPONSE,
           correlationId: message.correlationId,
           confirmed: true,
+          outcome: ToolConfirmationOutcome.ProceedOnce,
         });
       } else if (this.defaultToolDecision === 'deny') {
         this.emit(MessageBusType.TOOL_CONFIRMATION_RESPONSE, {
           type: MessageBusType.TOOL_CONFIRMATION_RESPONSE,
           correlationId: message.correlationId,
           confirmed: false,
+          outcome: ToolConfirmationOutcome.Cancel,
         });
       } else {
         // ask_user

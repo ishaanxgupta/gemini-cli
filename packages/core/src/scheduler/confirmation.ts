@@ -68,12 +68,7 @@ export async function awaitConfirmation(
       const response = msg as ToolConfirmationResponse;
       if (response.correlationId === correlationId) {
         return {
-          outcome:
-            response.outcome ??
-            // TODO: Remove legacy confirmed boolean fallback once migration complete
-            (response.confirmed
-              ? ToolConfirmationOutcome.ProceedOnce
-              : ToolConfirmationOutcome.Cancel),
+          outcome: response.outcome!,
           payload: response.payload,
         };
       }
