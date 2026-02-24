@@ -46,7 +46,7 @@ import {
   type ExtensionInstallMetadata,
   type GeminiCLIExtension,
   type HookDefinition,
-  HookEventName,
+  type HookEventName,
   type ResolvedExtensionSetting,
   coreEvents,
 } from '@google/gemini-cli-core';
@@ -58,6 +58,7 @@ import {
   EXTENSIONS_CONFIG_FILENAME,
   INSTALL_METADATA_FILENAME,
   recursivelyHydrateStrings,
+  type JsonObject,
 } from './extensions/variables.js';
 import {
   getEnvContents,
@@ -76,147 +77,23 @@ interface ExtensionManagerParams {
   requestConsent: (consent: string) => Promise<boolean>;
   requestSetting: ((setting: ExtensionSetting) => Promise<string>) | null;
   workspaceDir: string;
-  clientVersion?: string;
   eventEmitter?: EventEmitter<ExtensionEvents>;
+  clientVersion?: string;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+function isRemoteSource(type: ExtensionInstallMetadata['type'] | undefined) {
+  return type === 'git' || type === 'github-release';
 }
 
-function isStringArray(value: unknown): value is string[] {
-  return (
-    Array.isArray(value) && value.every((item) => typeof item === 'string')
-  );
-}
-
-function isExtensionSetting(value: unknown): value is ExtensionSetting {
-  if (!isRecord(value)) {
-    return false;
-  }
-  return (
-    typeof value['name'] === 'string' &&
-    typeof value['description'] === 'string' &&
-    typeof value['envVar'] === 'string' &&
-    (value['sensitive'] === undefined ||
-      typeof value['sensitive'] === 'boolean')
-  );
-}
-
-function isExtensionConfig(value: unknown): value is ExtensionConfig {
-  if (!isRecord(value)) {
-    return false;
-  }
-  if (
-    typeof value['name'] !== 'string' ||
-    typeof value['version'] !== 'string'
-  ) {
-    return false;
-  }
-  if (
-    value['contextFileName'] !== undefined &&
-    typeof value['contextFileName'] !== 'string' &&
-    !isStringArray(value['contextFileName'])
-  ) {
-    return false;
-  }
-  if (
-    value['excludeTools'] !== undefined &&
-    !isStringArray(value['excludeTools'])
-  ) {
-    return false;
-  }
-  if (
-    value['settings'] !== undefined &&
-    (!Array.isArray(value['settings']) ||
-      !value['settings'].every((setting) => isExtensionSetting(setting)))
-  ) {
-    return false;
-  }
-  return true;
-}
-
-function isHookConfig(value: unknown): boolean {
-  if (!isRecord(value)) {
-    return false;
-  }
-  return value['type'] === 'command' && typeof value['command'] === 'string';
-}
-
-function isHookDefinition(value: unknown): value is HookDefinition {
-  if (!isRecord(value) || !Array.isArray(value['hooks'])) {
-    return false;
-  }
-  if (value['matcher'] !== undefined && typeof value['matcher'] !== 'string') {
-    return false;
-  }
-  if (
-    value['sequential'] !== undefined &&
-    typeof value['sequential'] !== 'boolean'
-  ) {
-    return false;
-  }
-  return value['hooks'].every((hook) => isHookConfig(hook));
-}
-
-function isErrnoWithCode(
-  error: unknown,
-  code: string,
-): error is NodeJS.ErrnoException {
-  return isRecord(error) && error['code'] === code;
-}
-
-function isRemoteExtension(
-  installMetadata: ExtensionInstallMetadata | undefined,
-): boolean {
-  return (
-    installMetadata?.type === 'git' ||
-    installMetadata?.type === 'github-release'
-  );
-}
-
-function isAllowedExtensionSource(
-  source: string,
-  allowedExtensions: string[] | undefined,
-): boolean {
-  if (!allowedExtensions || allowedExtensions.length === 0) {
-    return true;
-  }
-  return allowedExtensions.some((pattern) => {
+function sourceAllowed(source: string, patterns?: string[]): boolean {
+  if (!patterns || patterns.length === 0) return true;
+  return patterns.some((pattern) => {
     try {
       return new RegExp(pattern).test(source);
     } catch {
       return false;
     }
   });
-}
-
-function injectEnvIntoHooks(
-  hooks: { [K in HookEventName]?: HookDefinition[] } | undefined,
-  customEnv: Record<string, string>,
-): { [K in HookEventName]?: HookDefinition[] } | undefined {
-  if (!hooks || Object.keys(customEnv).length === 0) {
-    return hooks;
-  }
-  const hydratedHooks = resolveEnvVarsInObject(hooks, customEnv);
-  const result: { [K in HookEventName]?: HookDefinition[] } = {};
-  for (const eventName of Object.values(HookEventName)) {
-    const definitions = hydratedHooks[eventName];
-    if (!definitions) {
-      continue;
-    }
-    result[eventName] = definitions.map((definition) => ({
-      ...definition,
-      hooks: definition.hooks.map((hook) => ({
-        ...hook,
-        env: {
-          ...customEnv,
-          ...hook.env,
-        },
-      })),
-    }));
-  }
-  return result;
 }
 
 /**
@@ -246,7 +123,7 @@ export class ExtensionManager extends ExtensionLoader {
       telemetry: options.settings.telemetry,
       interactive: false,
       sessionId: randomUUID(),
-      clientVersion: options.clientVersion,
+      clientVersion: options.clientVersion ?? 'unknown',
       targetDir: options.workspaceDir,
       cwd: options.workspaceDir,
       model: '',
@@ -307,7 +184,7 @@ export class ExtensionManager extends ExtensionLoader {
       ).getExtensionDir();
       const reloadedExtension = await this.loadExtension(extensionStoragePath);
       if (!reloadedExtension) {
-        throw new Error(`Extension not found`);
+        throw new Error('Extension not found');
       }
       this.loadedExtensions = [...this.getExtensions(), reloadedExtension];
       return;
@@ -329,6 +206,17 @@ export class ExtensionManager extends ExtensionLoader {
       );
     }
     const isUpdate = !!previousExtensionConfig;
+    if (
+      isRemoteSource(installMetadata.type) &&
+      !sourceAllowed(
+        installMetadata.source,
+        this.settings.security.allowedExtensions,
+      )
+    ) {
+      throw new Error(
+        `Installing extension from source "${installMetadata.source}" is not allowed by the "allowedExtensions" security setting.`,
+      );
+    }
     let newExtensionConfig: ExtensionConfig | null = null;
     let localSourcePath: string | undefined;
     let extension: GeminiCLIExtension | null;
@@ -364,18 +252,6 @@ export class ExtensionManager extends ExtensionLoader {
       }
 
       let tempDir: string | undefined;
-
-      if (
-        isRemoteExtension(installMetadata) &&
-        !isAllowedExtensionSource(
-          installMetadata.source,
-          this.settings.security.allowedExtensions,
-        )
-      ) {
-        throw new Error(
-          `Installing extension from source "${installMetadata.source}" is not allowed by the "allowedExtensions" security setting.`,
-        );
-      }
 
       if (
         installMetadata.type === 'git' ||
@@ -679,7 +555,6 @@ Would you like to attempt to install via "git clone" instead?`,
     try {
       subdirs = await fs.promises.readdir(extensionsDir);
     } catch {
-      // Directory doesn't exist or can't be read
       return this.loadedExtensions;
     }
 
@@ -690,13 +565,12 @@ Would you like to attempt to install via "git clone" instead?`,
 
     const results = await Promise.all(loadPromises);
 
-    // Validate and collect successfully loaded extensions
     const names = new Set<string>();
     const extensions: GeminiCLIExtension[] = [];
-
     for (const result of results) {
-      if (result === null) continue;
-
+      if (result === null) {
+        continue;
+      }
       if (names.has(result.name)) {
         debugLogger.error(`Duplicate extension name detected: ${result.name}`);
         continue;
@@ -705,10 +579,8 @@ Would you like to attempt to install via "git clone" instead?`,
       extensions.push(result);
     }
 
-    // Single atomic update to shared state
     this.loadedExtensions = extensions;
 
-    // Start extensions sequentially to preserve ordering guarantees
     for (const extension of this.loadedExtensions) {
       await this.maybeStartExtension(extension);
     }
@@ -740,7 +612,7 @@ Would you like to attempt to install via "git clone" instead?`,
     const installMetadata = loadInstallMetadata(extensionDir);
     let effectiveExtensionPath = extensionDir;
     if (
-      isRemoteExtension(installMetadata) &&
+      isRemoteSource(installMetadata?.type) &&
       this.settings.security.blockGitExtensions
     ) {
       // eslint-disable-next-line no-console
@@ -749,11 +621,10 @@ Would you like to attempt to install via "git clone" instead?`,
       );
       return null;
     }
-
     if (
       installMetadata &&
-      isRemoteExtension(installMetadata) &&
-      !isAllowedExtensionSource(
+      isRemoteSource(installMetadata.type) &&
+      !sourceAllowed(
         installMetadata.source,
         this.settings.security.allowedExtensions,
       )
@@ -870,20 +741,30 @@ Would you like to attempt to install via "git clone" instead?`,
           extensionPath: effectiveExtensionPath,
           workspacePath: this.workspaceDir,
         });
+        if (hooks && Object.keys(customEnv).length > 0) {
+          hooks = resolveEnvVarsInObject(hooks, customEnv);
+          for (const definitions of Object.values(hooks)) {
+            if (!definitions) continue;
+            for (const definition of definitions) {
+              for (const hook of definition.hooks) {
+                hook.env = { ...customEnv, ...(hook.env ?? {}) };
+              }
+            }
+          }
+        }
       }
-      hooks = injectEnvIntoHooks(hooks, customEnv);
 
       const loadedSkills = await loadSkillsFromDir(
         path.join(effectiveExtensionPath, 'skills'),
       );
       const skills = resolveEnvVarsInObject(loadedSkills, customEnv);
 
-      const loadedAgentResult = await loadAgentsFromDirectory(
+      const loadedAgents = await loadAgentsFromDirectory(
         path.join(effectiveExtensionPath, 'agents'),
       );
       const agentLoadResult = {
-        ...loadedAgentResult,
-        agents: resolveEnvVarsInObject(loadedAgentResult.agents, customEnv),
+        ...loadedAgents,
+        agents: resolveEnvVarsInObject(loadedAgents.agents, customEnv),
       };
 
       // Log errors but don't fail the entire extension load
@@ -913,7 +794,6 @@ Would you like to attempt to install via "git clone" instead?`,
         agents: agentLoadResult.agents,
         themes: config.themes,
       };
-
       return extension;
     } catch (e) {
       debugLogger.error(
@@ -945,23 +825,24 @@ Would you like to attempt to install via "git clone" instead?`,
     }
     try {
       const configContent = await fs.promises.readFile(configFilePath, 'utf-8');
-      const rawConfig: unknown = JSON.parse(configContent);
-      if (!isExtensionConfig(rawConfig)) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      const rawConfig = JSON.parse(configContent) as ExtensionConfig;
+      if (!rawConfig.name || !rawConfig.version) {
         throw new Error(
-          `Invalid configuration in ${configFilePath}: missing "name" or "version"`,
+          `Invalid configuration in ${configFilePath}: missing ${!rawConfig.name ? '"name"' : '"version"'}`,
         );
       }
-      const config = recursivelyHydrateStrings(rawConfig, {
-        extensionPath: extensionDir,
-        workspacePath: this.workspaceDir,
-        '/': path.sep,
-        pathSeparator: path.sep,
-      });
-      if (!isExtensionConfig(config)) {
-        throw new Error(
-          `Invalid configuration in ${configFilePath}: failed schema validation`,
-        );
-      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      const config = recursivelyHydrateStrings(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        rawConfig as unknown as JsonObject,
+        {
+          extensionPath: extensionDir,
+          workspacePath: this.workspaceDir,
+          '/': path.sep,
+          pathSeparator: path.sep,
+        },
+      ) as unknown as ExtensionConfig;
 
       validateName(config.name);
       return config;
@@ -982,13 +863,15 @@ Would you like to attempt to install via "git clone" instead?`,
 
     try {
       const hooksContent = await fs.promises.readFile(hooksFilePath, 'utf-8');
-      const rawHooks: unknown = JSON.parse(hooksContent);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const rawHooks = JSON.parse(hooksContent);
 
       if (
-        !isRecord(rawHooks) ||
-        typeof rawHooks['hooks'] !== 'object' ||
-        rawHooks['hooks'] === null ||
-        Array.isArray(rawHooks['hooks'])
+        !rawHooks ||
+        typeof rawHooks !== 'object' ||
+        typeof rawHooks.hooks !== 'object' ||
+        rawHooks.hooks === null ||
+        Array.isArray(rawHooks.hooks)
       ) {
         debugLogger.warn(
           `Invalid hooks configuration in ${hooksFilePath}: "hooks" property must be an object`,
@@ -996,37 +879,21 @@ Would you like to attempt to install via "git clone" instead?`,
         return undefined;
       }
 
-      const hydratedHooks = recursivelyHydrateStrings(rawHooks['hooks'], {
-        ...context,
-        '/': path.sep,
-        pathSeparator: path.sep,
-      });
+      // Hydrate variables in the hooks configuration
+      const hydratedHooks = recursivelyHydrateStrings(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        rawHooks.hooks as unknown as JsonObject,
+        {
+          ...context,
+          '/': path.sep,
+          pathSeparator: path.sep,
+        },
+      ) as { [K in HookEventName]?: HookDefinition[] };
 
-      if (!isRecord(hydratedHooks)) {
-        return undefined;
-      }
-
-      const validatedHooks: { [K in HookEventName]?: HookDefinition[] } = {};
-      for (const eventName of Object.values(HookEventName)) {
-        const eventHooks = hydratedHooks[eventName];
-        if (eventHooks === undefined) {
-          continue;
-        }
-        if (
-          !Array.isArray(eventHooks) ||
-          !eventHooks.every((hook) => isHookDefinition(hook))
-        ) {
-          debugLogger.warn(
-            `Invalid hook definition for ${eventName} in ${hooksFilePath}`,
-          );
-          continue;
-        }
-        validatedHooks[eventName] = eventHooks;
-      }
-
-      return validatedHooks;
+      return hydratedHooks;
     } catch (e) {
-      if (isErrnoWithCode(e, 'ENOENT')) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
         return undefined; // File not found is not an error here.
       }
       debugLogger.warn(
