@@ -120,11 +120,15 @@ export interface ResumedSessionData {
 export class ChatRecordingService {
   private conversationFile: string | null = null;
   private cachedLastConvData: string | null = null;
+  private currentConversation: ConversationRecord | null = null;
   private sessionId: string;
   private projectHash: string;
   private queuedThoughts: Array<ThoughtSummary & { timestamp: string }> = [];
   private queuedTokens: TokensSummary | null = null;
   private config: Config;
+
+  private isWriting = false;
+  private writePending = false;
 
   constructor(config: Config) {
     this.config = config;
@@ -142,14 +146,15 @@ export class ChatRecordingService {
         // Resume from existing session
         this.conversationFile = resumedSessionData.filePath;
         this.sessionId = resumedSessionData.conversation.sessionId;
+        this.currentConversation = resumedSessionData.conversation;
+
+        // Initialize cached data with current content (before update)
+        this.cachedLastConvData = JSON.stringify(this.currentConversation, null, 2);
 
         // Update the session ID in the existing file
         this.updateConversation((conversation) => {
           conversation.sessionId = this.sessionId;
         });
-
-        // Clear any cached data to force fresh reads
-        this.cachedLastConvData = null;
       } else {
         // Create new session
         const chatsDir = path.join(
@@ -168,13 +173,20 @@ export class ChatRecordingService {
         )}.json`;
         this.conversationFile = path.join(chatsDir, filename);
 
-        this.writeConversation({
+        const initialConversation: ConversationRecord = {
           sessionId: this.sessionId,
           projectHash: this.projectHash,
           startTime: new Date().toISOString(),
           lastUpdated: new Date().toISOString(),
           messages: [],
-        });
+        };
+
+        this.currentConversation = initialConversation;
+
+        // Initial write synchronously to ensure file exists
+        const content = JSON.stringify(initialConversation, null, 2);
+        this.cachedLastConvData = content;
+        // fs.writeFileSync(this.conversationFile, content);
       }
 
       // Clear any queued data since this is a fresh start
@@ -403,9 +415,14 @@ export class ChatRecordingService {
    * Loads up the conversation record from disk.
    */
   private readConversation(): ConversationRecord {
+    if (this.currentConversation) {
+      return this.currentConversation;
+    }
+
     try {
       this.cachedLastConvData = fs.readFileSync(this.conversationFile!, 'utf8');
-      return JSON.parse(this.cachedLastConvData);
+      this.currentConversation = JSON.parse(this.cachedLastConvData);
+      return this.currentConversation!;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
         debugLogger.error('Error reading conversation file.', error);
@@ -413,13 +430,14 @@ export class ChatRecordingService {
       }
 
       // Placeholder empty conversation if file doesn't exist.
-      return {
+      this.currentConversation = {
         sessionId: this.sessionId,
         projectHash: this.projectHash,
         startTime: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         messages: [],
       };
+      return this.currentConversation;
     }
   }
 
@@ -430,32 +448,63 @@ export class ChatRecordingService {
     conversation: ConversationRecord,
     { allowEmpty = false }: { allowEmpty?: boolean } = {},
   ): void {
-    try {
-      if (!this.conversationFile) return;
-      // Don't write the file yet until there's at least one message.
-      if (conversation.messages.length === 0 && !allowEmpty) return;
+    if (!this.conversationFile) return;
+    // Don't write the file yet until there's at least one message.
+    if (conversation.messages.length === 0 && !allowEmpty) return;
 
-      // Only write the file if this change would change the file.
-      if (this.cachedLastConvData !== JSON.stringify(conversation, null, 2)) {
-        conversation.lastUpdated = new Date().toISOString();
-        const newContent = JSON.stringify(conversation, null, 2);
-        this.cachedLastConvData = newContent;
-        fs.writeFileSync(this.conversationFile, newContent);
-      }
-    } catch (error) {
-      // Handle disk full (ENOSPC) gracefully - disable recording but allow conversation to continue
-      if (
-        error instanceof Error &&
-        'code' in error &&
-        (error as NodeJS.ErrnoException).code === 'ENOSPC'
-      ) {
-        this.conversationFile = null;
-        debugLogger.warn(ENOSPC_WARNING_MESSAGE);
-        return; // Don't throw - allow the conversation to continue
-      }
-      debugLogger.error('Error writing conversation file.', error);
-      throw error;
+    // Update in-memory reference
+    this.currentConversation = conversation;
+
+    this.scheduleWrite();
+  }
+
+  private scheduleWrite() {
+    this.writePending = true;
+    if (!this.isWriting) {
+      this.processWriteQueue();
     }
+  }
+
+  private async processWriteQueue() {
+    this.isWriting = true;
+
+    while (this.writePending) {
+      this.writePending = false;
+
+      try {
+        if (!this.conversationFile || !this.currentConversation) break;
+
+        // Serialize current state
+        const contentToCheck = JSON.stringify(this.currentConversation, null, 2);
+
+        if (this.cachedLastConvData !== contentToCheck) {
+           // Update timestamp
+           this.currentConversation.lastUpdated = new Date().toISOString();
+           const newContent = JSON.stringify(this.currentConversation, null, 2);
+
+           this.cachedLastConvData = newContent;
+
+           await fs.promises.writeFile(this.conversationFile, newContent);
+        }
+      } catch (error) {
+        // Handle disk full (ENOSPC) gracefully - disable recording but allow conversation to continue
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          (error as NodeJS.ErrnoException).code === 'ENOSPC'
+        ) {
+          this.conversationFile = null;
+          debugLogger.warn(ENOSPC_WARNING_MESSAGE);
+          // Stop trying to write
+          this.writePending = false;
+          break;
+        }
+        debugLogger.error('Error writing conversation file.', error);
+        // Don't throw - we are in an async loop
+      }
+    }
+
+    this.isWriting = false;
   }
 
   /**
