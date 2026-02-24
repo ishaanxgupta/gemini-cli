@@ -89,30 +89,64 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
 
     // Parse @path
     let pathEndIndex = atIndex + 1;
-    let inEscape = false;
-    while (pathEndIndex < query.length) {
+    let quoteChar: string | null = null;
+
+    // Check if the character immediately after @ is a quote
+    if (pathEndIndex < query.length) {
       const char = query[pathEndIndex];
-      if (inEscape) {
-        inEscape = false;
-      } else if (char === '\\') {
-        inEscape = true;
-      } else if (/[,\s;!?()[\]{}]/.test(char)) {
-        // Path ends at first whitespace or punctuation not escaped
-        break;
-      } else if (char === '.') {
-        // For . we need to be more careful - only terminate if followed by whitespace or end of string
-        // This allows file extensions like .txt, .js but terminates at sentence endings like "file.txt. Next sentence"
-        const nextChar =
-          pathEndIndex + 1 < query.length ? query[pathEndIndex + 1] : '';
-        if (nextChar === '' || /\s/.test(nextChar)) {
+      if (char === "'" || char === '"') {
+        quoteChar = char;
+        pathEndIndex++; // Move past the opening quote
+      }
+    }
+
+    if (quoteChar) {
+      // Quoted path parsing
+      let inEscape = false;
+      while (pathEndIndex < query.length) {
+        const char = query[pathEndIndex];
+
+        if (inEscape) {
+          inEscape = false;
+        } else if (char === '\\' && quoteChar === '"') {
+          // Backslash escaping is only supported in double quotes
+          inEscape = true;
+        } else if (char === quoteChar) {
+          // Found closing quote
+          pathEndIndex++; // Include the closing quote in the raw string
           break;
         }
+        pathEndIndex++;
       }
-      pathEndIndex++;
+    } else {
+      // Unquoted path parsing
+      let inEscape = false;
+      while (pathEndIndex < query.length) {
+        const char = query[pathEndIndex];
+        if (inEscape) {
+          inEscape = false;
+        } else if (char === '\\') {
+          inEscape = true;
+        } else if (/[,\s;!?()[\]{}]/.test(char)) {
+          // Path ends at first whitespace or punctuation not escaped
+          break;
+        } else if (char === '.') {
+          // For . we need to be more careful - only terminate if followed by whitespace or end of string
+          // This allows file extensions like .txt, .js but terminates at sentence endings like "file.txt. Next sentence"
+          const nextChar =
+            pathEndIndex + 1 < query.length ? query[pathEndIndex + 1] : '';
+          if (nextChar === '' || /\s/.test(nextChar)) {
+            break;
+          }
+        }
+        pathEndIndex++;
+      }
     }
     const rawAtPath = query.substring(atIndex, pathEndIndex);
-    // unescapePath expects the @ symbol to be present, and will handle it.
-    const atPath = unescapePath(rawAtPath);
+    // Remove @ prefix before unescaping, then add it back
+    // This allows unescapePath to correctly handle quoted strings (e.g. 'path with spaces')
+    const rawPathContent = rawAtPath.substring(1);
+    const atPath = '@' + unescapePath(rawPathContent);
     parts.push({ type: 'atPath', content: atPath });
     currentIndex = pathEndIndex;
   }
