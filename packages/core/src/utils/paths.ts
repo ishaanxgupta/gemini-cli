@@ -276,39 +276,44 @@ export function makeRelative(
 }
 
 /**
- * Escapes special characters in a file path like macOS terminal does.
- * Escapes: spaces, parentheses, brackets, braces, semicolons, ampersands, pipes,
- * asterisks, question marks, dollar signs, backticks, quotes, hash, and other shell metacharacters.
+ * Escapes special characters in a file path.
+ * Prefers quoting (single or double) over backslash escaping for better cross-platform compatibility.
  */
 export function escapePath(filePath: string): string {
-  let result = '';
-  for (let i = 0; i < filePath.length; i++) {
-    const char = filePath[i];
-
-    // Count consecutive backslashes before this character
-    let backslashCount = 0;
-    for (let j = i - 1; j >= 0 && filePath[j] === '\\'; j--) {
-      backslashCount++;
-    }
-
-    // Character is already escaped if there's an odd number of backslashes before it
-    const isAlreadyEscaped = backslashCount % 2 === 1;
-
-    // Only escape if not already escaped
-    if (!isAlreadyEscaped && SHELL_SPECIAL_CHARS.test(char)) {
-      result += '\\' + char;
-    } else {
-      result += char;
-    }
+  // If no special characters, return as is
+  if (!SHELL_SPECIAL_CHARS.test(filePath)) {
+    return filePath;
   }
-  return result;
+
+  // Prefer single quotes if the path doesn't contain single quotes
+  if (!filePath.includes("'")) {
+    return `'${filePath}'`;
+  }
+
+  // Otherwise use double quotes and escape internal double quotes and backslashes
+  return `"${filePath.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
 /**
  * Unescapes special characters in a file path.
- * Removes backslash escaping from shell metacharacters.
+ * Handles quoted strings (single or double) and backslash escaping.
  */
 export function unescapePath(filePath: string): string {
+  // Handle quoted strings
+  if (filePath.length >= 2) {
+    const first = filePath[0];
+    const last = filePath[filePath.length - 1];
+
+    if (first === "'" && last === "'") {
+      return filePath.slice(1, -1);
+    }
+
+    if (first === '"' && last === '"') {
+      return filePath.slice(1, -1).replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+  }
+
+  // Handle legacy/manual backslash escaping
   return filePath.replace(
     new RegExp(`\\\\([${SHELL_SPECIAL_CHARS.source.slice(1, -1)}])`, 'g'),
     '$1',

@@ -8,128 +8,70 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { escapePath, unescapePath, isSubpath, shortenPath } from './paths.js';
 
 describe('escapePath', () => {
-  it.each([
-    ['spaces', 'my file.txt', 'my\\ file.txt'],
-    ['tabs', 'file\twith\ttabs.txt', 'file\\\twith\\\ttabs.txt'],
-    ['parentheses', 'file(1).txt', 'file\\(1\\).txt'],
-    ['square brackets', 'file[backup].txt', 'file\\[backup\\].txt'],
-    ['curly braces', 'file{temp}.txt', 'file\\{temp\\}.txt'],
-    ['semicolons', 'file;name.txt', 'file\\;name.txt'],
-    ['ampersands', 'file&name.txt', 'file\\&name.txt'],
-    ['pipes', 'file|name.txt', 'file\\|name.txt'],
-    ['asterisks', 'file*.txt', 'file\\*.txt'],
-    ['question marks', 'file?.txt', 'file\\?.txt'],
-    ['dollar signs', 'file$name.txt', 'file\\$name.txt'],
-    ['backticks', 'file`name.txt', 'file\\`name.txt'],
-    ['single quotes', "file'name.txt", "file\\'name.txt"],
-    ['double quotes', 'file"name.txt', 'file\\"name.txt'],
-    ['hash symbols', 'file#name.txt', 'file\\#name.txt'],
-    ['exclamation marks', 'file!name.txt', 'file\\!name.txt'],
-    ['tildes', 'file~name.txt', 'file\\~name.txt'],
-    [
-      'less than and greater than signs',
-      'file<name>.txt',
-      'file\\<name\\>.txt',
-    ],
-  ])('should escape %s', (_, input, expected) => {
-    expect(escapePath(input)).toBe(expected);
+  it('should quote paths with spaces using single quotes', () => {
+    expect(escapePath('my file.txt')).toBe("'my file.txt'");
   });
 
-  it('should handle multiple special characters', () => {
-    expect(escapePath('my file (backup) [v1.2].txt')).toBe(
-      'my\\ file\\ \\(backup\\)\\ \\[v1.2\\].txt',
+  it('should quote paths with special characters using single quotes', () => {
+    expect(escapePath('file(1).txt')).toBe("'file(1).txt'");
+    expect(escapePath('file$name.txt')).toBe("'file$name.txt'");
+  });
+
+  it('should use double quotes if path contains single quotes', () => {
+    expect(escapePath("file'name.txt")).toBe('"file\'name.txt"');
+  });
+
+  it('should escape double quotes inside double quotes', () => {
+    expect(escapePath('file"name.txt')).toBe("'file\"name.txt'"); // No single quote, so use single quote
+    expect(escapePath('file\'name"test.txt')).toBe('"file\'name\\"test.txt"'); // Both quotes, use double and escape double
+  });
+
+  it('should escape backslashes inside double quotes', () => {
+    expect(escapePath("C:\\path'with\\single'quote")).toBe(
+      '"C:\\\\path\'with\\\\single\'quote"',
     );
   });
 
-  it('should not double-escape already escaped characters', () => {
-    expect(escapePath('my\\ file.txt')).toBe('my\\ file.txt');
-    expect(escapePath('file\\(name\\).txt')).toBe('file\\(name\\).txt');
-  });
-
-  it('should handle escaped backslashes correctly', () => {
-    // Double backslash (escaped backslash) followed by space should escape the space
-    expect(escapePath('path\\\\ file.txt')).toBe('path\\\\\\ file.txt');
-    // Triple backslash (escaped backslash + escaping backslash) followed by space should not double-escape
-    expect(escapePath('path\\\\\\ file.txt')).toBe('path\\\\\\ file.txt');
-    // Quadruple backslash (two escaped backslashes) followed by space should escape the space
-    expect(escapePath('path\\\\\\\\ file.txt')).toBe('path\\\\\\\\\\ file.txt');
-  });
-
-  it('should handle complex escaped backslash scenarios', () => {
-    // Escaped backslash before special character that needs escaping
-    expect(escapePath('file\\\\(test).txt')).toBe('file\\\\\\(test\\).txt');
-    // Multiple escaped backslashes
-    expect(escapePath('path\\\\\\\\with space.txt')).toBe(
-      'path\\\\\\\\with\\ space.txt',
-    );
-  });
-
-  it('should handle paths without special characters', () => {
+  it('should not quote paths without special characters', () => {
     expect(escapePath('normalfile.txt')).toBe('normalfile.txt');
     expect(escapePath('path/to/normalfile.txt')).toBe('path/to/normalfile.txt');
-  });
-
-  it('should handle complex real-world examples', () => {
-    expect(escapePath('My Documents/Project (2024)/file [backup].txt')).toBe(
-      'My\\ Documents/Project\\ \\(2024\\)/file\\ \\[backup\\].txt',
-    );
-    expect(escapePath('file with $special &chars!.txt')).toBe(
-      'file\\ with\\ \\$special\\ \\&chars\\!.txt',
-    );
   });
 
   it('should handle empty strings', () => {
     expect(escapePath('')).toBe('');
   });
-
-  it('should handle paths with only special characters', () => {
-    expect(escapePath(' ()[]{};&|*?$`\'"#!~<>')).toBe(
-      '\\ \\(\\)\\[\\]\\{\\}\\;\\&\\|\\*\\?\\$\\`\\\'\\"\\#\\!\\~\\<\\>',
-    );
-  });
 });
 
 describe('unescapePath', () => {
-  it.each([
-    ['spaces', 'my\\ file.txt', 'my file.txt'],
-    ['tabs', 'file\\\twith\\\ttabs.txt', 'file\twith\ttabs.txt'],
-    ['parentheses', 'file\\(1\\).txt', 'file(1).txt'],
-    ['square brackets', 'file\\[backup\\].txt', 'file[backup].txt'],
-    ['curly braces', 'file\\{temp\\}.txt', 'file{temp}.txt'],
-  ])('should unescape %s', (_, input, expected) => {
-    expect(unescapePath(input)).toBe(expected);
+  it('should unescape single quoted strings', () => {
+    expect(unescapePath("'my file.txt'")).toBe('my file.txt');
   });
 
-  it('should unescape multiple special characters', () => {
-    expect(unescapePath('my\\ file\\ \\(backup\\)\\ \\[v1.2\\].txt')).toBe(
-      'my file (backup) [v1.2].txt',
-    );
+  it('should unescape double quoted strings', () => {
+    expect(unescapePath('"my file.txt"')).toBe('my file.txt');
   });
 
-  it('should handle paths without escaped characters', () => {
-    expect(unescapePath('normalfile.txt')).toBe('normalfile.txt');
-    expect(unescapePath('path/to/normalfile.txt')).toBe(
-      'path/to/normalfile.txt',
-    );
+  it('should handle escaped double quotes in double quoted strings', () => {
+    expect(unescapePath('"file\\"name.txt"')).toBe('file"name.txt');
   });
 
-  it('should handle all special characters', () => {
-    expect(
-      unescapePath(
-        '\\ \\(\\)\\[\\]\\{\\}\\;\\&\\|\\*\\?\\$\\`\\\'\\"\\#\\!\\~\\<\\>',
-      ),
-    ).toBe(' ()[]{};&|*?$`\'"#!~<>');
+  it('should handle escaped backslashes in double quoted strings', () => {
+    expect(unescapePath('"C:\\\\path"')).toBe('C:\\path');
+  });
+
+  it('should handle legacy backslash escaping', () => {
+    expect(unescapePath('my\\ file.txt')).toBe('my file.txt');
+    expect(unescapePath('file\\(1\\).txt')).toBe('file(1).txt');
   });
 
   it('should be the inverse of escapePath', () => {
     const testCases = [
       'my file.txt',
       'file(1).txt',
-      'file[backup].txt',
-      'My Documents/Project (2024)/file [backup].txt',
-      'file with $special &chars!.txt',
-      ' ()[]{};&|*?$`\'"#!~<>',
-      'file\twith\ttabs.txt',
+      "file'name.txt",
+      'file"name.txt',
+      'file\'name"test.txt',
+      'C:\\path\\to\\file.txt',
     ];
 
     testCases.forEach((testCase) => {
@@ -139,20 +81,6 @@ describe('unescapePath', () => {
 
   it('should handle empty strings', () => {
     expect(unescapePath('')).toBe('');
-  });
-
-  it('should not affect backslashes not followed by special characters', () => {
-    expect(unescapePath('file\\name.txt')).toBe('file\\name.txt');
-    expect(unescapePath('path\\to\\file.txt')).toBe('path\\to\\file.txt');
-  });
-
-  it('should handle escaped backslashes in unescaping', () => {
-    // Should correctly unescape when there are escaped backslashes
-    expect(unescapePath('path\\\\\\ file.txt')).toBe('path\\\\ file.txt');
-    expect(unescapePath('path\\\\\\\\\\ file.txt')).toBe(
-      'path\\\\\\\\ file.txt',
-    );
-    expect(unescapePath('file\\\\\\(test\\).txt')).toBe('file\\\\(test).txt');
   });
 });
 

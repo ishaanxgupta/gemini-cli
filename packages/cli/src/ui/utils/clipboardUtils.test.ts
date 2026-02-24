@@ -461,7 +461,7 @@ describe('clipboardUtils', () => {
 
     it('should handle single path with unescaped spaces from copy-paste', () => {
       const result = parsePastedPaths('/path/to/my file.txt', () => true);
-      expect(result).toBe('@/path/to/my\\ file.txt ');
+      expect(result).toBe("@'/path/to/my file.txt' ");
     });
 
     it('should handle Windows path', () => {
@@ -471,7 +471,7 @@ describe('clipboardUtils', () => {
 
     it('should handle Windows path with unescaped spaces', () => {
       const result = parsePastedPaths('C:\\My Documents\\file.txt', () => true);
-      expect(result).toBe('@C:\\My\\ Documents\\file.txt ');
+      expect(result).toBe("@'C:\\My Documents\\file.txt' ");
     });
 
     it('should handle multiple Windows paths', () => {
