@@ -89,6 +89,7 @@ describe('confirmation.ts', () => {
         type: MessageBusType.TOOL_CONFIRMATION_RESPONSE,
         correlationId,
         confirmed: true,
+        outcome: ToolConfirmationOutcome.ProceedOnce,
       });
 
       const result = await promise;
@@ -224,6 +225,7 @@ describe('confirmation.ts', () => {
         type: MessageBusType.TOOL_CONFIRMATION_RESPONSE,
         correlationId: '123e4567-e89b-12d3-a456-426614174000',
         confirmed: true,
+        outcome: ToolConfirmationOutcome.ProceedOnce,
       });
 
       const result = await promise;
@@ -259,6 +261,7 @@ describe('confirmation.ts', () => {
         type: MessageBusType.TOOL_CONFIRMATION_RESPONSE,
         correlationId: '123e4567-e89b-12d3-a456-426614174000',
         confirmed: true,
+        outcome: ToolConfirmationOutcome.ProceedOnce,
       });
       await promise;
 
