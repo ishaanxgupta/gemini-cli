@@ -14,6 +14,7 @@ import { debugLogger } from '../utils/debugLogger.js';
  */
 export class HookPlanner {
   private readonly hookRegistry: HookRegistry;
+  private readonly regexCache = new Map<string, RegExp | null>();
 
   constructor(hookRegistry: HookRegistry) {
     this.hookRegistry = hookRegistry;
@@ -99,14 +100,25 @@ export class HookPlanner {
    * Match tool name against matcher pattern
    */
   private matchesToolName(matcher: string, toolName: string): boolean {
-    try {
-      // Attempt to treat the matcher as a regular expression.
-      const regex = new RegExp(matcher);
-      return regex.test(toolName);
-    } catch {
-      // If it's not a valid regex, treat it as a literal string for an exact match.
-      return matcher === toolName;
+    let regex: RegExp | null | undefined = this.regexCache.get(matcher);
+
+    if (regex === undefined) {
+      try {
+        // Attempt to treat the matcher as a regular expression.
+        regex = new RegExp(matcher);
+      } catch {
+        // If it's not a valid regex, we'll store null to indicate that.
+        regex = null;
+      }
+      this.regexCache.set(matcher, regex);
     }
+
+    if (regex) {
+      return regex.test(toolName);
+    }
+
+    // If it's not a valid regex (regex is null), treat it as a literal string for an exact match.
+    return matcher === toolName;
   }
 
   /**
