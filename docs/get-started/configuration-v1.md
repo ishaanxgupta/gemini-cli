@@ -384,7 +384,7 @@ a few things you can try in order of recommendation:
     ```
 - **`usageStatisticsEnabled`** (boolean):
   - **Description:** Enables or disables the collection of usage statistics. See
-    [Usage Statistics](#usage-statistics) for more information.
+    [Telemetry](../cli/telemetry.md) for more information.
   - **Default:** `true`
   - **Example:**
     ```json
