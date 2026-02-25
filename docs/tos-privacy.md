@@ -7,7 +7,7 @@ is licensed under the
 When you use Gemini CLI to access or use Google’s services, the Terms of Service
 and Privacy Notices applicable to those services apply to such access and use.
 
-Your Gemini CLI Usage Statistics are handled in accordance with Google's Privacy
+Your Gemini CLI Telemetry are handled in accordance with Google's Privacy
 Policy.
 
 **Note:** See [quotas and pricing](/docs/quota-and-pricing.md) for the quota and
@@ -91,6 +91,6 @@ backend, these Terms of Service and Privacy Notice documents apply:
 
 ## Usage statistics opt-out
 
-You may opt-out from sending Gemini CLI Usage Statistics to Google by following
-the instructions available here:
-[Usage Statistics Configuration](https://github.com/google-gemini/gemini-cli/blob/main/docs/get-started/configuration.md#usage-statistics).
+You may opt-out from sending Gemini CLI Telemetry to Google by following the
+instructions available here:
+[Telemetry Configuration](https://github.com/google-gemini/gemini-cli/blob/main/docs/get-started/configuration.md#telemetry).
