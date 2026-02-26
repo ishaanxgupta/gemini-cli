@@ -43,8 +43,10 @@ export async function crawl(options: CrawlOptions): Promise<string[]> {
     }
   }
 
-  const posixCwd = toPosixPath(options.cwd);
-  const posixCrawlDirectory = toPosixPath(options.crawlDirectory);
+  const posixCwd = toPosixPath(path.normalize(options.cwd));
+  const posixCrawlDirectory = toPosixPath(
+    path.normalize(options.crawlDirectory),
+  );
   const maxFiles = options.maxFiles ?? Infinity;
   let fileCount = 0;
   let truncated = false;
