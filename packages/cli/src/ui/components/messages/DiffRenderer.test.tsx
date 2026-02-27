@@ -9,7 +9,7 @@ import { renderWithProviders } from '../../../test-utils/render.js';
 import { waitFor } from '../../../test-utils/async.js';
 import { DiffRenderer } from './DiffRenderer.js';
 import * as CodeColorizer from '../../utils/CodeColorizer.js';
-import { vi } from 'vitest';
+import { vi, describe, beforeEach, it, expect } from 'vitest';
 
 describe('<OverflowProvider><DiffRenderer /></OverflowProvider>', () => {
   const mockColorizeCode = vi.spyOn(CodeColorizer, 'colorizeCode');
@@ -357,6 +357,32 @@ fileDiff Index: Dockerfile
         );
         await waitFor(() => expect(lastFrame()).toContain('RUN npm run build'));
         expect(lastFrame()).toMatchSnapshot();
+      });
+
+      it('should handle CRLF line endings in diff content', async () => {
+        const diffWithCRLF =
+          'diff --git a/file.txt b/file.txt\r\n' +
+          'index 1234567..1234567 100644\r\n' +
+          '--- a/file.txt\r\n' +
+          '+++ b/file.txt\r\n' +
+          '@@ -1,1 +1,1 @@\r\n' +
+          '-old\r\n' +
+          '+new';
+
+        const { lastFrame } = renderWithProviders(
+          <OverflowProvider>
+            <DiffRenderer
+              diffContent={diffWithCRLF}
+              filename="file.txt"
+              terminalWidth={80}
+            />
+          </OverflowProvider>,
+          { useAlternateBuffer },
+        );
+        await waitFor(() => expect(lastFrame()).toContain('new'));
+        expect(lastFrame()).toMatchSnapshot();
+        // If split improperly, lines might contain '\r', which could affect rendering or matching logic.
+        // We expect normal rendering.
       });
     },
   );

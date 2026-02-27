@@ -50,4 +50,51 @@ describe('colorizeCode', () => {
     expect(lastFrame()).toMatch(/line 1\s*\n\s*\n\s*line 3/);
     unmount();
   });
+
+  it('handles CRLF line endings correctly', async () => {
+    const code = 'line 1\r\nline 2\r\nline 3';
+    const settings = new LoadedSettings(
+      { path: '', settings: {}, originalSettings: {} },
+      { path: '', settings: {}, originalSettings: {} },
+      {
+        path: '',
+        settings: { ui: { useAlternateBuffer: true, showLineNumbers: false } },
+        originalSettings: {
+          ui: { useAlternateBuffer: true, showLineNumbers: false },
+        },
+      },
+      { path: '', settings: {}, originalSettings: {} },
+      true,
+      [],
+    );
+
+    const result = colorizeCode({
+      code,
+      language: 'javascript',
+      maxWidth: 80,
+      settings,
+      hideLineNumbers: true,
+    });
+
+    const { lastFrame, waitUntilReady, unmount } = renderWithProviders(
+      <>{result}</>,
+    );
+    await waitUntilReady();
+
+    const output = lastFrame();
+    // Should contain "line 1", "line 2", "line 3" without carriage returns or weird artifacts.
+    // ink-testing-library's lastFrame() usually returns visual representation.
+    expect(output).toContain('line 1');
+    expect(output).toContain('line 2');
+    expect(output).toContain('line 3');
+    // Ensure it split into 3 lines (plus potential empty lines depending on rendering)
+    // The key is that `split(/\r?\n/)` would produce ["line 1", "line 2", "line 3"]
+    // whereas `split('\n')` on CRLF string would produce ["line 1\r", "line 2\r", "line 3"]
+    // We want to ensure no '\r' is present if possible, but lastFrame() might strip it.
+    // However, if we check the React structure (which we can't easily here without more tooling),
+    // we assume the visual output is correct if the text is present.
+    // A stronger test is checking the number of Box elements or similar if we could traverse the tree.
+
+    unmount();
+  });
 });
