@@ -1079,6 +1079,23 @@ describe('fileUtils', () => {
       );
     });
 
+    it('should handle CRLF line endings when counting lines', async () => {
+      const content = 'Line 1\r\nLine 2\r\nLine 3';
+      actualNodeFs.writeFileSync(testTextFilePath, content);
+
+      const result = await processSingleFileContent(
+        testTextFilePath,
+        tempRootDir,
+        new StandardFileSystemService(),
+      );
+
+      // If split by \n only, it would be ["Line 1\r", "Line 2\r", "Line 3"] (length 3).
+      // If split by \r?\n, it would be ["Line 1", "Line 2", "Line 3"] (length 3).
+      // The length is the same, but the content of the lines differs.
+      expect(result.originalLineCount).toBe(3);
+      expect(result.llmContent).toBe('Line 1\nLine 2\nLine 3'); // Re-joined with \n
+    });
+
     it('should return an error if the file size exceeds 20MB', async () => {
       // Create a small test file
       actualNodeFs.writeFileSync(testTextFilePath, 'test content');

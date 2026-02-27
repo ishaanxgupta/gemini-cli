@@ -560,6 +560,18 @@ export function getShellConfiguration(): ShellConfiguration {
       }
     }
 
+    // Check if ComSpec points to cmd.exe
+    if (comSpec) {
+      const executable = comSpec.toLowerCase();
+      if (executable.endsWith('cmd.exe')) {
+        return {
+          executable: comSpec,
+          argsPrefix: ['/d', '/c'],
+          shell: 'cmd',
+        };
+      }
+    }
+
     // Default to PowerShell for all other Windows configurations.
     return {
       executable: 'powershell.exe',

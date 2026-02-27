@@ -49,6 +49,12 @@ exports[`<OverflowProvider><DiffRenderer /></OverflowProvider> > with useAlterna
 "
 `;
 
+exports[`<OverflowProvider><DiffRenderer /></OverflowProvider> > with useAlternateBuffer = false > should handle CRLF line endings in diff content 1`] = `
+"1 - old
+1 + new
+"
+`;
+
 exports[`<OverflowProvider><DiffRenderer /></OverflowProvider> > with useAlternateBuffer = false > should handle diff with only header and no changes 1`] = `
 "╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
 │                                                                                                  │
@@ -139,6 +145,12 @@ exports[`<OverflowProvider><DiffRenderer /></OverflowProvider> > with useAlterna
 "1 FROM node:14
 2 RUN npm install
 3 RUN npm run build
+"
+`;
+
+exports[`<OverflowProvider><DiffRenderer /></OverflowProvider> > with useAlternateBuffer = true > should handle CRLF line endings in diff content 1`] = `
+"1 - old
+1 + new
 "
 `;
 
