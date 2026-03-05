@@ -5,6 +5,7 @@
  */
 
 import { execSync } from 'node:child_process';
+import path from 'node:path';
 
 function checkRelease() {
   try {
@@ -28,7 +29,7 @@ function checkRelease() {
 
     vsixFiles.sort();
     const latestFile = vsixFiles[vsixFiles.length - 1];
-    const fileName = latestFile.split('/').pop();
+    const fileName = path.basename(latestFile);
     const match =
       /signed-gemini-cli-vscode-ide-companion-(\d+\.\d+\.\d+)-([a-f0-9]{7})\.vsix$/.exec(
         fileName,
