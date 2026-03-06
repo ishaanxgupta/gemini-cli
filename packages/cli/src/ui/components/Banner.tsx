@@ -21,7 +21,7 @@ export function getFormattedBannerContent(
   }
 
   const text = rawText.replace(/\\n/g, '\n');
-  const lines = text.split('\n');
+  const lines = text.split(/\r?\n/);
 
   return lines.map((line, index) => {
     if (index === 0) {

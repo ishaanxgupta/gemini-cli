@@ -1129,7 +1129,7 @@ export class Session {
                 !globResult.llmContent.startsWith('No files found') &&
                 !globResult.llmContent.startsWith('Error:')
               ) {
-                const lines = globResult.llmContent.split('\n');
+                const lines = globResult.llmContent.split(/\r?\n/);
                 if (lines.length > 1 && lines[1]) {
                   const firstMatchAbsolute = lines[1].trim();
                   currentPathSpec = path.relative(

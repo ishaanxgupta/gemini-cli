@@ -101,7 +101,7 @@ describe('<ContextSummaryDisplay />', () => {
     const { lastFrame: narrowFrame, unmount: unmountNarrow } =
       await renderWithWidth(79, props);
     expect(narrowFrame().trim().includes('\n')).toBe(true);
-    expect(narrowFrame().trim().split('\n').length).toBe(4);
+    expect(narrowFrame().trim().split(/\r?\n/).length).toBe(4);
     unmountNarrow();
   });
   it('should not render empty parts', async () => {

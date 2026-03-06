@@ -373,7 +373,7 @@ ${finalExclusionPatternsForDescription
 
           const lines =
             typeof fileReadResult.llmContent === 'string'
-              ? fileReadResult.llmContent.split('\n').length
+              ? fileReadResult.llmContent.split(/\r?\n/).length
               : undefined;
           const mimetype = getSpecificMimeType(filePath);
           const programming_language = getProgrammingLanguage({
