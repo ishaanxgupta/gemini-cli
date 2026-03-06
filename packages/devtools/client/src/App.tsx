@@ -93,7 +93,7 @@ export default function App() {
         const consoleLogs: ConsoleLog[] = [];
 
         content
-          .split('\n')
+          .split(/\r?\n/)
           .filter((l) => l.trim())
           .forEach((l) => {
             const parsed = JSON.parse(l);
@@ -528,7 +528,7 @@ function TabButton({
 function ConsoleLogEntry({ log, t }: { log: ConsoleLog; t: ThemeColors }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const content = log.content || '';
-  const lines = content.split('\n');
+  const lines = content.split(/\r?\n/);
   const CHAR_LIMIT = 500;
   const LINE_LIMIT = 5;
 
@@ -1514,7 +1514,7 @@ function JsonViewer({ content, t }: { content: string; t: ThemeColors }) {
       .map((eventBlock, i) => ({
         index: i + 1,
         jsonStr: eventBlock
-          .split('\n')
+          .split(/\r?\n/)
           .filter((line) => line.trim().startsWith('data:'))
           .map((line) => line.trim().substring(5).trim())
           .join(''),
@@ -1579,7 +1579,7 @@ function jsonToLines(data: unknown): JsonLine[] {
     return [
       { text: 'undefined', foldStart: false, foldEnd: -1, closingBracket: '' },
     ];
-  const raw = str.split('\n');
+  const raw = str.split(/\r?\n/);
   const lines: JsonLine[] = raw.map((text) => ({
     text,
     foldStart: false,
@@ -1643,7 +1643,7 @@ function highlightLine(text: string, t: ThemeColors): React.ReactNode {
       } catch {
         unescaped = full.slice(1, -1);
       }
-      const strLines = unescaped.split('\n');
+      const strLines = unescaped.split(/\r?\n/);
       if (strLines.length <= 1) {
         parts.push(
           <span key={lastIndex} style={{ color: '#81c995' }}>

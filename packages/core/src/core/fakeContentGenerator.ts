@@ -51,7 +51,7 @@ export class FakeContentGenerator implements ContentGenerator {
   static async fromFile(filePath: string): Promise<FakeContentGenerator> {
     const fileContent = await promises.readFile(filePath, 'utf-8');
     const responses = fileContent
-      .split('\n')
+      .split(/\r?\n/)
       .filter((line) => line.trim() !== '')
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       .map((line) => JSON.parse(line) as FakeResponse);

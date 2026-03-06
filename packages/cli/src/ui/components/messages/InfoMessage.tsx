@@ -34,10 +34,10 @@ export const InfoMessage: React.FC<InfoMessageProps> = ({
         <Text color={color}>{prefix}</Text>
       </Box>
       <Box flexGrow={1} flexDirection="column">
-        {text.split('\n').map((line, index) => (
+        {text.split(/\r?\n/).map((line, index) => (
           <Text wrap="wrap" key={index}>
             <RenderInline text={line} defaultColor={color} />
-            {index === text.split('\n').length - 1 && secondaryText && (
+            {index === text.split(/\r?\n/).length - 1 && secondaryText && (
               <Text color={theme.text.secondary}> {secondaryText}</Text>
             )}
           </Text>

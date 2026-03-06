@@ -420,7 +420,7 @@ describe('TableRenderer', () => {
       waitForText: '123456',
       assertions: (output: string) => {
         expect(output).toContain('123456');
-        const dataLines = output.split('\n').filter((l) => /123456/.test(l));
+        const dataLines = output.split(/\r?\n/).filter((l) => /123456/.test(l));
         expect(dataLines.length).toBe(3);
       },
     },
@@ -460,7 +460,7 @@ describe('TableRenderer', () => {
         expect(output).toContain('https://yahoo.com');
         expect(output).toContain('(https://google.com)');
         const dataLine = output
-          .split('\n')
+          .split(/\r?\n/)
           .find((l) => l.includes('Visit Google'));
         expect(dataLine).toContain('Visit Google');
       },

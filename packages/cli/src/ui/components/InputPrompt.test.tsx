@@ -1896,7 +1896,7 @@ describe('InputPrompt', () => {
       },
     ])('$name', async ({ text, cursor, showSuggestions }) => {
       mockBuffer.text = text;
-      mockBuffer.lines = text.split('\n');
+      mockBuffer.lines = text.split(/\r?\n/);
       mockBuffer.cursor = cursor as [number, number];
 
       mockedUseCommandCompletion.mockReturnValue({
@@ -2128,8 +2128,8 @@ describe('InputPrompt', () => {
         'should display cursor correctly $name in a multiline block',
         async ({ name, text, visualCursor, expected, visualToLogicalMap }) => {
           mockBuffer.text = text;
-          mockBuffer.lines = text.split('\n');
-          mockBuffer.viewportVisualLines = text.split('\n');
+          mockBuffer.lines = text.split(/\r?\n/);
+          mockBuffer.viewportVisualLines = text.split(/\r?\n/);
           mockBuffer.visualCursor = visualCursor as [number, number];
           mockBuffer.visualToLogicalMap = visualToLogicalMap as Array<
             [number, number]
@@ -2156,8 +2156,8 @@ describe('InputPrompt', () => {
       it('should display cursor on a blank line in a multiline block', async () => {
         const text = 'first line\n\nthird line';
         mockBuffer.text = text;
-        mockBuffer.lines = text.split('\n');
-        mockBuffer.viewportVisualLines = text.split('\n');
+        mockBuffer.lines = text.split(/\r?\n/);
+        mockBuffer.viewportVisualLines = text.split(/\r?\n/);
         mockBuffer.visualCursor = [1, 0]; // cursor on the blank line
         mockBuffer.visualToLogicalMap = [
           [0, 0],
@@ -2171,7 +2171,7 @@ describe('InputPrompt', () => {
         );
         await waitFor(() => {
           const frame = stdout.lastFrameRaw();
-          const lines = frame.split('\n');
+          const lines = frame.split(/\r?\n/);
           // The line with the cursor should just be an inverted space inside the box border
           expect(
             lines.find((l) => l.includes(chalk.inverse(' '))),
@@ -2186,9 +2186,9 @@ describe('InputPrompt', () => {
     it('should correctly render multiline input including blank lines', async () => {
       const text = 'hello\n\nworld';
       mockBuffer.text = text;
-      mockBuffer.lines = text.split('\n');
-      mockBuffer.viewportVisualLines = text.split('\n');
-      mockBuffer.allVisualLines = text.split('\n');
+      mockBuffer.lines = text.split(/\r?\n/);
+      mockBuffer.viewportVisualLines = text.split(/\r?\n/);
+      mockBuffer.allVisualLines = text.split(/\r?\n/);
       mockBuffer.visualCursor = [2, 5]; // cursor at the end of "world"
       // Provide a visual-to-logical mapping for each visual line
       mockBuffer.visualToLogicalMap = [
@@ -2208,7 +2208,7 @@ describe('InputPrompt', () => {
         expect(frame).toContain('hello');
         expect(frame).toContain(`world${chalk.inverse(' ')}`);
 
-        const outputLines = frame.trim().split('\n');
+        const outputLines = frame.trim().split(/\r?\n/);
         // The number of lines should be 2 for the border plus 3 for the content.
         expect(outputLines.length).toBe(5);
       });
@@ -3442,7 +3442,7 @@ describe('InputPrompt', () => {
       const baseProps = props;
       const TestWrapper = () => {
         const [isExpanded, setIsExpanded] = useState(false);
-        const currentLines = isExpanded ? largeText.split('\n') : [id];
+        const currentLines = isExpanded ? largeText.split(/\r?\n/) : [id];
         const currentText = isExpanded ? largeText : id;
 
         const buffer = {
@@ -3529,7 +3529,7 @@ describe('InputPrompt', () => {
       const baseProps = props;
       const TestWrapper = () => {
         const [isExpanded, setIsExpanded] = useState(true); // Start expanded
-        const currentLines = isExpanded ? largeText.split('\n') : [id];
+        const currentLines = isExpanded ? largeText.split(/\r?\n/) : [id];
         const currentText = isExpanded ? largeText : id;
 
         const buffer = {

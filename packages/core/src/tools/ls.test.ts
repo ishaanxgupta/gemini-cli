@@ -229,7 +229,7 @@ describe('LSTool', () => {
       const lines = (
         typeof result.llmContent === 'string' ? result.llmContent : ''
       )
-        .split('\n')
+        .split(/\r?\n/)
         .filter(Boolean);
       const entries = lines.slice(1); // Skip header
 

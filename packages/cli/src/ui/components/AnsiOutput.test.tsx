@@ -82,7 +82,7 @@ describe('<AnsiOutputText />', () => {
     await waitUntilReady();
     const output = lastFrame();
     expect(output).toBeDefined();
-    const lines = output.split('\n');
+    const lines = output.split(/\r?\n/);
     expect(lines[0].trim()).toBe('First line');
     expect(lines[1].trim()).toBe('');
     expect(lines[2].trim()).toBe('Third line');
