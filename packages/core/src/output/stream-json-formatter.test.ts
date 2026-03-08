@@ -201,7 +201,7 @@ describe('StreamJsonFormatter', () => {
 
       // Should not contain multiple spaces or newlines (except trailing)
       expect(result).not.toContain('  ');
-      expect(result.split('\n').length).toBe(2); // JSON + trailing newline
+      expect(result.split(/\r?\n/).length).toBe(2); // JSON + trailing newline
     });
   });
 

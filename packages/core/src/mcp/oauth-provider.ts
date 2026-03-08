@@ -196,7 +196,7 @@ export class MCPOAuthProvider {
       issuerCandidates.add(`${authUrl.origin}${pathname}`);
 
       const versionSegmentPattern = /^v\d+(\.\d+)?$/i;
-      const segments = pathname.split('/').filter(Boolean);
+      const segments = pathname.split(/[/\\]/).filter(Boolean);
       const lastSegment = segments.at(-1);
       if (lastSegment && versionSegmentPattern.test(lastSegment)) {
         const withoutVersionPath = segments.slice(0, -1);

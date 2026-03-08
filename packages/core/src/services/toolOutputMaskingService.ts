@@ -192,7 +192,7 @@ export class ToolOutputMaskingService {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         (part.functionResponse.response as Record<string, unknown>) || {};
 
-      const totalLines = content.split('\n').length;
+      const totalLines = content.split(/\r?\n/).length;
       const fileSizeMB = (
         Buffer.byteLength(content, 'utf8') /
         1024 /
@@ -346,7 +346,7 @@ export class ToolOutputMaskingService {
   }
 
   private formatSimplePreview(content: string): string {
-    const lines = content.split('\n');
+    const lines = content.split(/\r?\n/);
     if (lines.length <= 20) return content;
     const head = lines.slice(0, 10);
     const tail = lines.slice(-10);

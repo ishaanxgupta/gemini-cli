@@ -132,7 +132,7 @@ export function getGitHubRepoInfo(): { owner: string; repo: string } {
     );
   }
 
-  const parts = parsedUrl.pathname.split('/').filter((part) => part !== '');
+  const parts = parsedUrl.pathname.split(/[/\\]/).filter((part) => part !== '');
   if (parts.length !== 2 || !parts[0] || !parts[1]) {
     throw new Error(
       `Owner & repo could not be extracted from remote URL: ${remoteUrl}`,

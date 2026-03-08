@@ -65,7 +65,7 @@ describe('ToolResultDisplay Overflow', () => {
     if (frame) {
       expect(frame.toLowerCase()).toContain('press ctrl+o to show more lines');
       // Ensure it's AFTER the bottom border
-      const linesOfOutput = frame.split('\n');
+      const linesOfOutput = frame.split(/\r?\n/);
       const bottomBorderIndex = linesOfOutput.findLastIndex((l) =>
         l.includes('╰─'),
       );

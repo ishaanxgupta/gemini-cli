@@ -425,7 +425,7 @@ Return a JSON object with:
       }
 
       if (keyMatchers[Command.NAVIGATION_DOWN](key)) {
-        const targetLines = currentIssue.body.split('\n');
+        const targetLines = currentIssue.body.split(/\r?\n/);
         const visibleLines = targetExpanded
           ? VISIBLE_LINES_EXPANDED
           : VISIBLE_LINES_COLLAPSED;
@@ -524,7 +524,7 @@ Return a JSON object with:
   }
 
   const targetBody = currentIssue.body || '';
-  const targetLines = targetBody.split('\n');
+  const targetLines = targetBody.split(/\r?\n/);
   const visibleLines = targetExpanded
     ? VISIBLE_LINES_EXPANDED
     : VISIBLE_LINES_COLLAPSED;
