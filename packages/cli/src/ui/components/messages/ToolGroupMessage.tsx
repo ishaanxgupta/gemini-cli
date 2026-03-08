@@ -197,7 +197,7 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
         const text = tool.resultDisplay;
         const hasTrailingNewline = text.endsWith('\n');
         const contentText = hasTrailingNewline ? text.slice(0, -1) : text;
-        const lineCount = contentText.split('\n').length;
+        const lineCount = contentText.split(/\r?\n/).length;
         return lineCount > contentMaxLines;
       }
       if (Array.isArray(tool.resultDisplay)) {

@@ -31,7 +31,7 @@ const addHolidayTrees = (art: string): string => {
   *********
      |_|`;
 
-  const treeLines = holidayTree.split('\n').filter((l) => l.length > 0);
+  const treeLines = holidayTree.split(/\r?\n/).filter((l) => l.length > 0);
   const treeWidth = getAsciiArtWidth(holidayTree);
   const logoWidth = getAsciiArtWidth(art);
 
@@ -98,7 +98,7 @@ export const useSnowfall = (displayTitle: string): string => {
   // We don't need 'frame' state if we just use functional updates for snowflakes,
   // but we need a trigger. A simple interval is fine.
 
-  const lines = displayArt.split('\n');
+  const lines = displayArt.split(/\r?\n/);
   const height = lines.length;
   const width = getAsciiArtWidth(displayArt);
 

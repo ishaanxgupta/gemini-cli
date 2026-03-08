@@ -607,7 +607,7 @@ export function hasCycleInSchema(schema: object): boolean {
     if (!ref.startsWith('#/')) {
       return null;
     }
-    const path = ref.substring(2).split('/');
+    const path = ref.substring(2).split(/[/\\]/);
     let current: unknown = schema;
     for (const segment of path) {
       if (

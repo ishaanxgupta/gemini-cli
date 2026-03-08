@@ -306,7 +306,7 @@ describe('<MaxSizedBox />', () => {
     expect(lastFrame()).toContain('... last');
 
     const frame = lastFrame();
-    const lines = frame.trim().split('\n');
+    const lines = frame.trim().split(/\r?\n/);
     const lastLine = lines[lines.length - 1];
 
     // The last line should only contain the hidden indicator, no leaked content

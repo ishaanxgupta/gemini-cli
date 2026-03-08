@@ -32,7 +32,7 @@ export const ThinkingMessage: React.FC<ThinkingMessageProps> = ({
 
     if (!subject) {
       const lines = description
-        .split('\n')
+        .split(/\r?\n/)
         .map((l) => l.trim())
         .filter(Boolean);
       return {

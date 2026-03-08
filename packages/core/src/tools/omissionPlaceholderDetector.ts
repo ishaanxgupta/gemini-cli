@@ -92,7 +92,7 @@ function normalizePlaceholder(line: string): string | null {
  * Returns all placeholders found as normalized tokens.
  */
 export function detectOmissionPlaceholders(text: string): string[] {
-  const lines = text.replaceAll('\r\n', '\n').split('\n');
+  const lines = text.replaceAll('\r\n', '\n').split(/\r?\n/);
   const matches: string[] = [];
 
   for (const rawLine of lines) {
