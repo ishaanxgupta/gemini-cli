@@ -366,7 +366,7 @@ describe('<LoadingIndicator />', () => {
       );
       await waitUntilReady();
       const output = lastFrame();
-      const lines = output?.trim().split('\n');
+      const lines = output?.trim().split(/\r?\n/);
       // Expecting 3 lines:
       // 1. Spinner + Primary Text
       // 2. Cancel + Timer

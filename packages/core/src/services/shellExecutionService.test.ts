@@ -108,7 +108,7 @@ const shellExecutionConfig: ShellExecutionConfig = {
 const createMockSerializeTerminalToObjectReturnValue = (
   text: string | string[],
 ): AnsiOutput => {
-  const lines = Array.isArray(text) ? text : text.split('\n');
+  const lines = Array.isArray(text) ? text : text.split(/\r?\n/);
   const len = shellExecutionConfig.terminalHeight ?? 24;
   const expected: AnsiOutput = Array.from({ length: len }, (_, i) => [
     {
@@ -126,7 +126,7 @@ const createMockSerializeTerminalToObjectReturnValue = (
 };
 
 const createExpectedAnsiOutput = (text: string | string[]): AnsiOutput => {
-  const lines = Array.isArray(text) ? text : text.split('\n');
+  const lines = Array.isArray(text) ? text : text.split(/\r?\n/);
   const len = shellExecutionConfig.terminalHeight ?? 24;
   const expected: AnsiOutput = Array.from({ length: len }, (_, i) => [
     {
@@ -331,12 +331,12 @@ describe('ShellExecutionService', () => {
       // The terminal buffer output includes trailing spaces for each line (up to terminal width).
       // We trim each line to match our expected simple string.
       const processedOutput = result.output
-        .split('\n')
+        .split(/\r?\n/)
         .map((l) => l.trimEnd())
         .join('\n')
         .trim();
       expect(processedOutput).toBe(expectedOutput);
-      expect(result.output.split('\n').length).toBeGreaterThanOrEqual(
+      expect(result.output.split(/\r?\n/).length).toBeGreaterThanOrEqual(
         lineCount,
       );
     });
@@ -397,7 +397,7 @@ describe('ShellExecutionService', () => {
 
       const outputLines = result.output
         .trim()
-        .split('\n')
+        .split(/\r?\n/)
         .map((l) => l.trimEnd());
 
       // We expect the *start* of the output to be truncated.

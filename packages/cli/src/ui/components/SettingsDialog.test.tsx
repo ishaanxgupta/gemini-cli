@@ -318,7 +318,7 @@ describe('SettingsDialog', () => {
       await waitFor(() => {
         const output = lastFrame();
         expect(output).toBeDefined();
-        const lines = output.trim().split('\n');
+        const lines = output.trim().split(/\r?\n/);
 
         expect(lines.length).toBeGreaterThanOrEqual(24);
         expect(lines.length).toBeLessThanOrEqual(25);

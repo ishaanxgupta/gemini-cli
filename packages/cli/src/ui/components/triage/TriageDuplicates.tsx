@@ -179,7 +179,7 @@ export const TriageDuplicates = ({
       if (!dupComment) return null;
 
       // Extract candidate numbers
-      const lines = dupComment.body.split('\n');
+      const lines = dupComment.body.split(/\r?\n/);
       const candidateNumbers: number[] = [];
       for (const line of lines) {
         const match = line.match(/#(\d+)/);
@@ -670,7 +670,7 @@ Return a JSON object with:
         }
         if (keyMatchers[Command.NAVIGATION_DOWN](key)) {
           const targetBody = state.currentIssue?.body || '';
-          const targetLines = targetBody.split('\n');
+          const targetLines = targetBody.split(/\r?\n/);
           const visibleLines = targetExpanded
             ? VISIBLE_LINES_EXPANDED
             : VISIBLE_LINES_COLLAPSED;
@@ -699,7 +699,7 @@ Return a JSON object with:
       } else if (focusSection === 'candidate_detail') {
         const selectedCandidate = state.candidates?.[selectedCandidateIndex];
         const candBody = selectedCandidate?.body || '';
-        const candLines = candBody.split('\n');
+        const candLines = candBody.split(/\r?\n/);
         const maxScroll = Math.max(0, candLines.length - VISIBLE_LINES_DETAIL);
 
         if (keyMatchers[Command.MOVE_LEFT](key)) {
@@ -781,7 +781,7 @@ Return a JSON object with:
   if (!currentIssue) return <Text>Loading...</Text>;
 
   const targetBody = currentIssue.body || '';
-  const targetLines = targetBody.split('\n');
+  const targetLines = targetBody.split(/\r?\n/);
   const visibleLines = targetExpanded
     ? VISIBLE_LINES_EXPANDED
     : VISIBLE_LINES_COLLAPSED;
@@ -794,7 +794,7 @@ Return a JSON object with:
 
   if (focusSection === 'candidate_detail' && selectedCandidate) {
     const candBody = selectedCandidate.body || '';
-    const candLines = candBody.split('\n');
+    const candLines = candBody.split(/\r?\n/);
     const candViewLines = candLines.slice(
       candidateScrollOffset,
       candidateScrollOffset + VISIBLE_LINES_DETAIL,

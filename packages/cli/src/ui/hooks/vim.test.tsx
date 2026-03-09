@@ -104,7 +104,7 @@ describe('useVim hook', () => {
     cursor: [number, number] = [0, 5],
   ) => {
     const cursorState = { pos: cursor };
-    const lines = text.split('\n');
+    const lines = text.split(/\r?\n/);
 
     return {
       lines,

@@ -52,7 +52,7 @@ describe('ShowMoreLines layout and padding', () => {
     // With paddingX=1, there should be a space before the text
     // With marginBottom=1, there should be an empty line between the text and "Bottom"
     // Since "Top" is just above it without margin, it should be on the previous line
-    const lines = output.split('\n');
+    const lines = output.split(/\r?\n/);
 
     expect(lines).toEqual([
       'Top',
@@ -80,7 +80,7 @@ describe('ShowMoreLines layout and padding', () => {
     await waitUntilReady();
 
     const output = lastFrame({ allowEmpty: true });
-    const lines = output.split('\n');
+    const lines = output.split(/\r?\n/);
 
     expect(lines).toEqual([
       'Top',

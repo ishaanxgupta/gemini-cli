@@ -840,7 +840,7 @@ describe('CodeAssistServer', () => {
         str: 'value',
       };
       const jsonString = JSON.stringify(jsonObj, null, 2);
-      const lines = jsonString.split('\n');
+      const lines = jsonString.split(/\r?\n/);
       const ssePayload = lines.map((line) => `data: ${line}\n`).join('') + '\n';
 
       const mockStream = new Readable({

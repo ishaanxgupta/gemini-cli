@@ -273,7 +273,7 @@ describe('useShellHistory', () => {
     // After adding 'new_cmd': ['new_cmd', 'old_cmd_119', ..., 'old_cmd_21'] (100 items)
     // Written to file (reversed): ['old_cmd_21', ..., 'old_cmd_119', 'new_cmd']
     const writtenContent = mockedFs.writeFile.mock.calls[0][1] as string;
-    const writtenLines = writtenContent.split('\n');
+    const writtenLines = writtenContent.split(/\r?\n/);
 
     expect(writtenLines.length).toBe(100);
     expect(writtenLines[0]).toBe('old_cmd_21'); // New oldest command
@@ -305,7 +305,7 @@ describe('useShellHistory', () => {
     });
 
     const writtenContent = mockedFs.writeFile.mock.calls[0][1] as string;
-    const writtenLines = writtenContent.split('\n');
+    const writtenLines = writtenContent.split(/\r?\n/);
 
     expect(writtenLines).toEqual(['cmd2', 'cmd3', 'cmd1']);
 

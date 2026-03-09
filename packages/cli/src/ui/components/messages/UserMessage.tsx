@@ -34,7 +34,7 @@ export const UserMessage: React.FC<UserMessageProps> = ({ text, width }) => {
   const displayText = useMemo(() => {
     if (!text) return text;
     return text
-      .split('\n')
+      .split(/\r?\n/)
       .map((line) => {
         const transformations = calculateTransformationsForLine(line);
         // We pass a cursor position of [-1, -1] so that no transformations are expanded (e.g. images remain collapsed)
