@@ -807,7 +807,7 @@ describe('extensionSettings', () => {
       expect(actualContent).toContain('VAR1=updated-value');
 
       // Ensure no other unexpected changes or deletions
-      const lines = actualContent.split('\n').filter((line) => line.length > 0);
+      const lines = actualContent.split(/\r?\n/).filter((line) => line.length > 0);
       expect(lines).toHaveLength(3); // Should only have the three variables
     });
 

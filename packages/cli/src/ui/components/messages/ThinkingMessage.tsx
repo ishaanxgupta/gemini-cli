@@ -28,14 +28,14 @@ function normalizeThoughtLines(thought: ThoughtSummary): string[] {
   }
 
   if (!subject) {
-    return description.split('\n');
+    return description.split(/\r?\n/);
   }
 
   if (!description) {
     return [subject];
   }
 
-  const bodyLines = description.split('\n');
+  const bodyLines = description.split(/\r?\n/);
   return [subject, ...bodyLines];
 }
 

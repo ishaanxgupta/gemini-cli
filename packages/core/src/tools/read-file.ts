@@ -141,7 +141,7 @@ ${result.llmContent}`;
 
     const lines =
       typeof result.llmContent === 'string'
-        ? result.llmContent.split('\n').length
+        ? result.llmContent.split(/\r?\n/).length
         : undefined;
     const mimetype = getSpecificMimeType(this.resolvedPath);
     const programming_language = getProgrammingLanguage({

@@ -206,7 +206,7 @@ describe('RewindViewer', () => {
         expect(frame).toMatchSnapshot(expectedSnapshot);
         if (expectedSnapshot === 'after-up') {
           const headerLines = frame
-            ?.split('\n')
+            ?.split(/\r?\n/)
             .filter((line) => line.includes('╭───'));
           expect(headerLines).toHaveLength(1);
         }

@@ -16,7 +16,7 @@ export async function getStartupWarnings(): Promise<string[]> {
     await fs.access(warningsFilePath); // Check if file exists
     const warningsContent = await fs.readFile(warningsFilePath, 'utf-8');
     const warnings = warningsContent
-      .split('\n')
+      .split(/\r?\n/)
       .filter((line) => line.trim() !== '');
     try {
       await fs.unlink(warningsFilePath);

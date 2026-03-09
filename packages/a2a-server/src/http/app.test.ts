@@ -50,7 +50,7 @@ const streamToSSEEvents = (
     .filter(Boolean) // Remove empty strings from trailing newlines
     .map((chunk) => {
       const dataLine = chunk
-        .split('\n')
+        .split(/\r?\n/)
         .find((line) => line.startsWith('data: '));
       if (!dataLine) {
         throw new Error(`Invalid SSE chunk found: "${chunk}"`);

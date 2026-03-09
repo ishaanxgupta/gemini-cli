@@ -302,7 +302,7 @@ describe('updateGitignore', () => {
 
     // Verify the entries were added (not just mentioned in comments)
     const lines = content
-      .split('\n')
+      .split(/\r?\n/)
       .map((line) => line.split('#')[0].trim())
       .filter((line) => line);
     expect(lines).toContain('.gemini/');
