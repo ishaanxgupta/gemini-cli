@@ -553,7 +553,11 @@ export function getShellConfiguration(): ShellConfiguration {
       ) {
         return {
           executable: comSpec,
-          argsPrefix: ['-NoProfile', '-Command'],
+          argsPrefix: [
+            '-NoProfile',
+            '-Command',
+            '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;',
+          ],
           shell: 'powershell',
         };
       }
@@ -562,7 +566,11 @@ export function getShellConfiguration(): ShellConfiguration {
     // Default to PowerShell for all other Windows configurations.
     return {
       executable: 'powershell.exe',
-      argsPrefix: ['-NoProfile', '-Command'],
+      argsPrefix: [
+        '-NoProfile',
+        '-Command',
+        '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;',
+      ],
       shell: 'powershell',
     };
   }
