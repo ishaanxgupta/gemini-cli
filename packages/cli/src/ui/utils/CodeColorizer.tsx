@@ -147,7 +147,7 @@ export function colorizeCode({
   settings,
   hideLineNumbers = false,
 }: ColorizeCodeOptions): React.ReactNode {
-  const codeToHighlight = code.replace(/\n$/, '');
+  const codeToHighlight = code.replace(/\r?\n$/, '');
   const activeTheme = theme || themeManager.getActiveTheme();
   const showLineNumbers = hideLineNumbers
     ? false

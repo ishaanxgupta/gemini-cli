@@ -433,13 +433,13 @@ describe('getShellConfiguration', () => {
       expect(config.shell).toBe('powershell');
     });
 
-    it('should ignore ComSpec when pointing to cmd.exe', () => {
+    it('should return cmd configuration when pointing to cmd.exe', () => {
       const cmdPath = 'C:\\WINDOWS\\system32\\cmd.exe';
       process.env['ComSpec'] = cmdPath;
       const config = getShellConfiguration();
-      expect(config.executable).toBe('powershell.exe');
-      expect(config.argsPrefix).toEqual(['-NoProfile', '-Command']);
-      expect(config.shell).toBe('powershell');
+      expect(config.executable).toBe(cmdPath);
+      expect(config.argsPrefix).toEqual(['/d', '/c']);
+      expect(config.shell).toBe('cmd');
     });
 
     it('should return PowerShell configuration if ComSpec points to powershell.exe', () => {
