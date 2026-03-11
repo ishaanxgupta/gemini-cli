@@ -81,7 +81,7 @@ export function jsonToMarkdown(data: unknown, indent = 0): string {
 
   if (typeof data === 'string') {
     return data
-      .split('\n')
+      .split(/\r?\n/)
       .map((line, i) => (i === 0 ? line : spacing + line))
       .join('\n');
   }

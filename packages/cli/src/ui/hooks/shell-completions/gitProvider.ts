@@ -66,7 +66,7 @@ export const gitProvider: ShellCompletionProvider = {
           );
 
           const branches = stdout
-            .split('\n')
+            .split(/\r?\n/)
             .map((b) => b.trim())
             .filter(Boolean);
 

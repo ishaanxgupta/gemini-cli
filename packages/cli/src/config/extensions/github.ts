@@ -114,7 +114,7 @@ export function tryParseGithubUrl(source: string): GithubRepoInfo | null {
   }
   // The pathname should be "/owner/repo".
   const parts = parsedUrl?.pathname
-    .split('/')
+    .split(/[\/\\]/)
     // Remove the empty segments, fixes trailing and leading slashes
     .filter((part) => part !== '');
 

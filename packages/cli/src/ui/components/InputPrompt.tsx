@@ -136,7 +136,7 @@ export const calculatePromptWidths = (mainContentWidth: number) => {
  * Returns true if the given text exceeds the thresholds for being considered a "large paste".
  */
 export function isLargePaste(text: string): boolean {
-  const pasteLineCount = text.split('\n').length;
+  const pasteLineCount = text.split(/\r?\n/).length;
   return (
     pasteLineCount > LARGE_PASTE_LINE_THRESHOLD ||
     text.length > LARGE_PASTE_CHAR_THRESHOLD
@@ -1306,7 +1306,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
     const usedWidth = stringWidth(textBeforeCursor);
     const remainingWidth = Math.max(0, inputWidth - usedWidth);
 
-    const ghostTextLinesRaw = ghostSuffix.split('\n');
+    const ghostTextLinesRaw = ghostSuffix.split(/\r?\n/);
     const firstLineRaw = ghostTextLinesRaw.shift() || '';
 
     let inlineGhost = '';
@@ -1341,7 +1341,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
     const additionalLines: string[] = [];
     if (remainingGhostText) {
-      const textLines = remainingGhostText.split('\n');
+      const textLines = remainingGhostText.split(/\r?\n/);
       for (const textLine of textLines) {
         const words = textLine.split(' ');
         let currentLine = '';

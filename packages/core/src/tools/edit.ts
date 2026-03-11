@@ -178,9 +178,9 @@ async function calculateFlexibleReplacement(
 
   const sourceLines = normalizedCode.match(/.*(?:\n|$)/g)?.slice(0, -1) ?? [];
   const searchLinesStripped = normalizedSearch
-    .split('\n')
+    .split(/\r?\n/)
     .map((line: string) => line.trim());
-  const replaceLines = normalizedReplace.split('\n');
+  const replaceLines = normalizedReplace.split(/\r?\n/);
 
   let flexibleOccurrences = 0;
   let i = 0;
@@ -265,7 +265,7 @@ async function calculateRegexReplacement(
   }
 
   const occurrences = matches.length;
-  const newLines = normalizedReplace.split('\n');
+  const newLines = normalizedReplace.split(/\r?\n/);
 
   // Use the appropriate regex for replacement based on allow_multiple.
   const replaceRegex = new RegExp(
@@ -779,10 +779,10 @@ class EditToolInvocation
     }
 
     const oldStringSnippet =
-      this.params.old_string.split('\n')[0].substring(0, 30) +
+      this.params.old_string.split(/\r?\n/)[0].substring(0, 30) +
       (this.params.old_string.length > 30 ? '...' : '');
     const newStringSnippet =
-      this.params.new_string.split('\n')[0].substring(0, 30) +
+      this.params.new_string.split(/\r?\n/)[0].substring(0, 30) +
       (this.params.new_string.length > 30 ? '...' : '');
 
     if (this.params.old_string === this.params.new_string) {
@@ -1225,7 +1225,7 @@ async function calculateFuzzyReplacement(
     // so that indices remain valid
     selectedMatches.sort((a, b) => b.index - a.index);
 
-    const newLines = normalizedReplace.split('\n');
+    const newLines = normalizedReplace.split(/\r?\n/);
 
     for (const match of selectedMatches) {
       // If we want to preserve the indentation of the first line of the match:

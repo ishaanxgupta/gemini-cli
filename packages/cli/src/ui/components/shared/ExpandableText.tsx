@@ -41,7 +41,7 @@ const _ExpandableText: React.FC<ExpandableTextProps> = ({
 
     if (!isExpanded) {
       if (maxLines !== undefined) {
-        const lines = label.split('\n');
+        const lines = label.split(/\r?\n/);
         // 1. Truncate by logical lines
         let truncated = lines.slice(0, maxLines).join('\n');
         const hasMoreLines = lines.length > maxLines;

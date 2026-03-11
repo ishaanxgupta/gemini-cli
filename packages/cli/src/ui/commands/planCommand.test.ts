@@ -38,7 +38,7 @@ vi.mock('node:path', async (importOriginal) => {
     ...actual,
     default: { ...actual },
     join: vi.fn((...args) => args.join('/')),
-    basename: vi.fn((p) => p.split('/').pop()),
+    basename: vi.fn((p) => p.split(/[\/\\]/).pop()),
   };
 });
 
