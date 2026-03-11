@@ -547,6 +547,13 @@ export function getShellConfiguration(): ShellConfiguration {
     const comSpec = process.env['ComSpec'];
     if (comSpec) {
       const executable = comSpec.toLowerCase();
+      if (executable.endsWith('cmd.exe')) {
+        return {
+          executable: comSpec,
+          argsPrefix: ['/d', '/c'],
+          shell: 'cmd.exe',
+        };
+      }
       if (
         executable.endsWith('powershell.exe') ||
         executable.endsWith('pwsh.exe')

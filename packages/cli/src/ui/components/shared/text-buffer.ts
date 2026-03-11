@@ -710,7 +710,7 @@ export const replaceRangeInternal = (
   const normalisedReplacement = text
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n');
-  const replacementParts = normalisedReplacement.split('\n');
+  const replacementParts = normalisedReplacement.split(/\r?\n/);
 
   // The combined first line of the new text
   const firstLine = prefix + replacementParts[0];
@@ -818,7 +818,7 @@ export function offsetToLogicalPos(
 
   if (offset === 0) return [0, 0];
 
-  const lines = text.split('\n');
+  const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineLength = cpLen(line);
@@ -1731,7 +1731,7 @@ function textBufferReducerLogic(
       }
       const newContentLines = action.payload
         .replace(/\r\n?/g, '\n')
-        .split('\n');
+        .split(/\r?\n/);
       const lines = newContentLines.length === 0 ? [''] : newContentLines;
 
       let newCursorRow: number;
@@ -1775,7 +1775,7 @@ function textBufferReducerLogic(
       if (action.isPaste) {
         // Normalize line endings for pastes
         payload = payload.replace(/\r\n|\r/g, '\n');
-        const lineCount = payload.split('\n').length;
+        const lineCount = payload.split(/\r?\n/).length;
         if (
           lineCount > LARGE_PASTE_LINE_THRESHOLD ||
           payload.length > LARGE_PASTE_CHAR_THRESHOLD
@@ -1803,7 +1803,7 @@ function textBufferReducerLogic(
       const str = stripUnsafeCharacters(
         payload.replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
       );
-      const parts = str.split('\n');
+      const parts = str.split(/\r?\n/);
       const lineContent = currentLine(newCursorRow);
       const before = cpSlice(lineContent, 0, newCursorCol);
       const after = cpSlice(lineContent, newCursorCol);
@@ -2595,7 +2595,7 @@ function textBufferReducerLogic(
         const suffix = cpSlice(line, placeholderStart + cpLen(id));
 
         // Split content into lines
-        const contentLines = content.split('\n');
+        const contentLines = content.split(/\r?\n/);
         const newLines = [...nextState.lines];
 
         let expandedLines: string[];
@@ -2711,7 +2711,7 @@ export function useTextBuffer({
 }: UseTextBufferProps): TextBuffer {
   const keyMatchers = useKeyMatchers();
   const initialState = useMemo((): TextBufferState => {
-    const lines = initialText.split('\n');
+    const lines = initialText.split(/\r?\n/);
     const [initialCursorRow, initialCursorCol] = calculateInitialCursorPosition(
       lines.length === 0 ? [''] : lines,
       initialCursorOffset,

@@ -49,7 +49,7 @@ export function SlicingMaxSizedBox<T>({
       if (maxLines) {
         const hasTrailingNewline = text.endsWith('\n');
         const contentText = hasTrailingNewline ? text.slice(0, -1) : text;
-        const lines = contentText.split('\n');
+        const lines = contentText.split(/\r?\n/);
         if (lines.length > maxLines) {
           // We will have a label from MaxSizedBox. Reserve space for it.
           const targetLines = Math.max(1, maxLines - 1);

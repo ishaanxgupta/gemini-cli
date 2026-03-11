@@ -188,7 +188,7 @@ export class AskUserInvocation extends BaseToolInvocation<
             const prefix = `  ${category} → `;
             const indent = ' '.repeat(prefix.length);
 
-            const lines = answer.split('\n');
+            const lines = answer.split(/\r?\n/);
             return prefix + lines.join('\n' + indent);
           })
           .join('\n')}`

@@ -46,7 +46,7 @@ beforeEach(() => {
       typeof firstArg === 'string' &&
       firstArg.includes('was not wrapped in act(...)')
     ) {
-      const stackLines = (new Error().stack || '').split('\n');
+      const stackLines = (new Error().stack || '').split(/\r?\n/);
       let lastReactFrameIndex = -1;
 
       // Find the index of the last frame that comes from react-reconciler

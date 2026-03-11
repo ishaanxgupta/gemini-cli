@@ -364,7 +364,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         new FileOperationEvent(
           WRITE_FILE_TOOL_NAME,
           operation,
-          fileContent.split('\n').length,
+          fileContent.split(/\r?\n/).length,
           mimetype,
           extension,
           programmingLanguage,

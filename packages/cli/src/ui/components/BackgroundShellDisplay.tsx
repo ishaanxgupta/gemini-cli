@@ -47,7 +47,7 @@ const HEADER_HEIGHT = 3; // 2 for border, 1 for header
 const TAB_DISPLAY_HORIZONTAL_PADDING = 4;
 
 const formatShellCommandForDisplay = (command: string, maxWidth: number) => {
-  const commandFirstLine = command.split('\n')[0];
+  const commandFirstLine = command.split(/\r?\n/)[0];
   return cpLen(commandFirstLine) > maxWidth
     ? `${cpSlice(commandFirstLine, 0, maxWidth - 3)}...`
     : commandFirstLine;
@@ -384,7 +384,7 @@ export const BackgroundShellDisplay = ({
   };
 
   const renderOutput = () => {
-    const lines = typeof output === 'string' ? output.split('\n') : output;
+    const lines = typeof output === 'string' ? output.split(/\r?\n/) : output;
 
     return (
       <ScrollableList
