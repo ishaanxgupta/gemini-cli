@@ -100,22 +100,27 @@ export const findLastSafeSplitPoint = (content: string) => {
     return enclosingBlockStart;
   }
 
-  // Search for the last double newline (\n\n) not in a code block.
+  // Search for the last double newline (\n\n or \r\n\r\n) not in a code block.
   let searchStartIndex = content.length;
   while (searchStartIndex >= 0) {
-    const dnlIndex = content.lastIndexOf('\n\n', searchStartIndex);
+    const unixIndex = content.lastIndexOf('\n\n', searchStartIndex);
+    const winIndex = content.lastIndexOf('\r\n\r\n', searchStartIndex);
+
+    const dnlIndex = Math.max(unixIndex, winIndex);
+
     if (dnlIndex === -1) {
       // No more double newlines found.
       break;
     }
 
-    const potentialSplitPoint = dnlIndex + 2;
+    const isWin = dnlIndex === winIndex;
+    const potentialSplitPoint = dnlIndex + (isWin ? 4 : 2);
     if (!isIndexInsideCodeBlock(content, potentialSplitPoint)) {
       return potentialSplitPoint;
     }
 
     // If potentialSplitPoint was inside a code block,
-    // the next search should start *before* the \n\n we just found to ensure progress.
+    // the next search should start *before* the newline we just found to ensure progress.
     searchStartIndex = dnlIndex - 1;
   }
 
