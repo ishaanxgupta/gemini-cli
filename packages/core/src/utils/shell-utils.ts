@@ -557,6 +557,13 @@ export function getShellConfiguration(): ShellConfiguration {
           shell: 'powershell',
         };
       }
+      if (executable.endsWith('cmd.exe')) {
+        return {
+          executable: comSpec,
+          argsPrefix: ['/d', '/c'],
+          shell: 'cmd',
+        };
+      }
     }
 
     // Default to PowerShell for all other Windows configurations.
