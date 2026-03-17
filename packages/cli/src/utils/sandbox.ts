@@ -92,7 +92,7 @@ export async function start_sandbox(
         '-D',
         `HOME_DIR=${fs.realpathSync(homedir())}`,
         '-D',
-        `CACHE_DIR=${fs.realpathSync((await execAsync('getconf DARWIN_USER_CACHE_DIR')).stdout.trim())}`,
+        `CACHE_DIR=${fs.realpathSync((await execFileAsync('getconf', ['DARWIN_USER_CACHE_DIR'])).stdout.trim())}`,
       ];
 
       // Add included directories from the workspace context
@@ -193,9 +193,10 @@ export async function start_sandbox(
           );
         });
         debugLogger.log('waiting for proxy to start ...');
-        await execAsync(
+        await execFileAsync('sh', [
+          '-c',
           `until timeout 0.25 curl -s http://localhost:8877; do sleep 0.25; done`,
-        );
+        ]);
       }
       // spawn child and let it inherit stdio
       process.stdin.pause();
@@ -255,9 +256,11 @@ export async function start_sandbox(
           debugLogger.log(`using ${projectSandboxDockerfile} for sandbox`);
           buildArgs += `-f ${path.resolve(projectSandboxDockerfile)} -i ${image}`;
         }
-        execSync(
-          `cd ${gcRoot} && node scripts/build_sandbox.js -s ${buildArgs}`,
+        execFileSync(
+          'node',
+          ['scripts/build_sandbox.js', '-s', ...buildArgs.split(' ').filter(Boolean)],
           {
+            cwd: gcRoot,
             stdio: 'inherit',
             env: {
               ...process.env,
@@ -428,17 +431,21 @@ export async function start_sandbox(
 
       // if using proxy, switch to internal networking through proxy
       if (proxy) {
-        execSync(
-          `${command} network inspect ${SANDBOX_NETWORK_NAME} || ${command} network create --internal ${SANDBOX_NETWORK_NAME}`,
-        );
+        try {
+          execFileSync(command, ['network', 'inspect', SANDBOX_NETWORK_NAME], { stdio: 'ignore' });
+        } catch {
+          execFileSync(command, ['network', 'create', '--internal', SANDBOX_NETWORK_NAME], { stdio: 'ignore' });
+        }
         args.push('--network', SANDBOX_NETWORK_NAME);
         // if proxy command is set, create a separate network w/ host access (i.e. non-internal)
         // we will run proxy in its own container connected to both host network and internal network
         // this allows proxy to work even on rootless podman on macos with host<->vm<->container isolation
         if (proxyCommand) {
-          execSync(
-            `${command} network inspect ${SANDBOX_PROXY_NAME} || ${command} network create ${SANDBOX_PROXY_NAME}`,
-          );
+          try {
+            execFileSync(command, ['network', 'inspect', SANDBOX_PROXY_NAME], { stdio: 'ignore' });
+          } catch {
+            execFileSync(command, ['network', 'create', SANDBOX_PROXY_NAME], { stdio: 'ignore' });
+          }
         }
       }
     }
@@ -456,7 +463,7 @@ export async function start_sandbox(
     } else {
       let index = 0;
       const containerNameCheck = (
-        await execAsync(`${command} ps -a --format "{{.Names}}"`)
+        await execFileAsync(command, ['ps', '-a', '--format', '{{.Names}}'])
       ).stdout.trim();
       while (containerNameCheck.includes(`${imageName}-${index}`)) {
         index++;
@@ -625,8 +632,8 @@ export async function start_sandbox(
       // The entrypoint script then handles dropping privileges to the correct user.
       args.push('--user', 'root');
 
-      const uid = (await execAsync('id -u')).stdout.trim();
-      const gid = (await execAsync('id -g')).stdout.trim();
+      const uid = (await execFileAsync('id', ['-u'])).stdout.trim();
+      const gid = (await execFileAsync('id', ['-g'])).stdout.trim();
 
       // Instead of passing --user to the main sandbox container, we let it
       // start as root, then create a user with the host's UID/GID, and
@@ -701,7 +708,11 @@ export async function start_sandbox(
       // install handlers to stop proxy on exit/signal
       const stopProxy = () => {
         debugLogger.log('stopping proxy container ...');
-        execSync(`${command} rm -f ${SANDBOX_PROXY_NAME}`);
+        try {
+          execFileSync(command, ['rm', '-f', SANDBOX_PROXY_NAME], { stdio: 'ignore' });
+        } catch {
+          // ignore error
+        }
       };
       process.off('exit', stopProxy);
       process.on('exit', stopProxy);
@@ -726,13 +737,14 @@ export async function start_sandbox(
         );
       });
       debugLogger.log('waiting for proxy to start ...');
-      await execAsync(
+      await execFileAsync('sh', [
+        '-c',
         `until timeout 0.25 curl -s http://localhost:8877; do sleep 0.25; done`,
-      );
+      ]);
       // connect proxy container to sandbox network
       // (workaround for older versions of docker that don't support multiple --network args)
-      await execAsync(
-        `${command} network connect ${SANDBOX_NETWORK_NAME} ${SANDBOX_PROXY_NAME}`,
+      await execFileAsync(
+        command, ['network', 'connect', SANDBOX_NETWORK_NAME, SANDBOX_PROXY_NAME]
       );
     }
 

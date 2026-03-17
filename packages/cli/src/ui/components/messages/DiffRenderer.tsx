@@ -158,7 +158,7 @@ export const DiffRenderer: React.FC<DiffRendererProps> = ({
         .map((line) => line.content)
         .join('\n');
       // Attempt to infer language from filename, default to plain text if no filename
-      const fileExtension = filename?.split('.').pop() || null;
+      const fileExtension = filename?.split(/[/\\]/).pop()?.split('.').pop() || null;
       const language = fileExtension
         ? getLanguageFromExtension(fileExtension)
         : null;
@@ -232,7 +232,7 @@ const renderDiffContent = (
   );
   const gutterWidth = Math.max(1, maxLineNumber.toString().length);
 
-  const fileExtension = filename?.split('.').pop() || null;
+  const fileExtension = filename?.split(/[/\\]/).pop()?.split('.').pop() || null;
   const language = fileExtension
     ? getLanguageFromExtension(fileExtension)
     : null;
