@@ -76,7 +76,7 @@ describe('colorizeCode', () => {
     const renderResult = await renderWithProviders(<>{result}</>);
     await renderResult.waitUntilReady();
 
-    await expect(renderResult).toMatchSvgSnapshot();
+    expect(renderResult.lastFrame()).toMatchSnapshot();
     renderResult.unmount();
   });
 });

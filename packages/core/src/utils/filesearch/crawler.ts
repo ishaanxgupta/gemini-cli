@@ -26,7 +26,7 @@ export interface CrawlOptions {
 }
 
 function toPosixPath(p: string) {
-  return p.split(path.sep).join(path.posix.sep);
+  return path.normalize(p).split(/[/\\]/).join(path.posix.sep);
 }
 
 export async function crawl(options: CrawlOptions): Promise<string[]> {
