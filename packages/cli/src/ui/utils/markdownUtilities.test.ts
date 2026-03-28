@@ -14,6 +14,11 @@ describe('markdownUtilities', () => {
       expect(findLastSafeSplitPoint(content)).toBe(24); // After the second \n\n
     });
 
+    it('should split at the last double newline (Windows CRLF) if not in a code block', () => {
+      const content = 'paragraph1\r\n\r\nparagraph2\r\n\r\nparagraph3';
+      expect(findLastSafeSplitPoint(content)).toBe(28); // After the second \r\n\r\n
+    });
+
     it('should return content.length if no safe split point is found', () => {
       const content = 'longstringwithoutanysafesplitpoint';
       expect(findLastSafeSplitPoint(content)).toBe(content.length);
