@@ -558,6 +558,12 @@ export function getShellConfiguration(): ShellConfiguration {
           argsPrefix: ['-NoProfile', '-Command'],
           shell: 'powershell',
         };
+      } else if (executable.endsWith('cmd.exe')) {
+        return {
+          executable: comSpec,
+          argsPrefix: ['/d', '/c'],
+          shell: 'cmd',
+        };
       }
     }
 
