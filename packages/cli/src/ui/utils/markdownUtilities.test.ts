@@ -14,6 +14,11 @@ describe('markdownUtilities', () => {
       expect(findLastSafeSplitPoint(content)).toBe(24); // After the second \n\n
     });
 
+    it('should split at the last double newline (CRLF) if not in a code block', () => {
+      const content = 'paragraph1\r\n\r\nparagraph2\r\n\r\nparagraph3';
+      expect(findLastSafeSplitPoint(content)).toBe(28); // After the second \r\n\r\n
+    });
+
     it('should return content.length if no safe split point is found', () => {
       const content = 'longstringwithoutanysafesplitpoint';
       expect(findLastSafeSplitPoint(content)).toBe(content.length);
@@ -22,6 +27,11 @@ describe('markdownUtilities', () => {
     it('should prioritize splitting at \n\n over being at the very end of the string if the end is not in a code block', () => {
       const content = 'Some text here.\n\nAnd more text here.';
       expect(findLastSafeSplitPoint(content)).toBe(17); // after the \n\n
+    });
+
+    it('should prioritize splitting at \r\n\r\n over being at the very end of the string if the end is not in a code block', () => {
+      const content = 'Some text here.\r\n\r\nAnd more text here.';
+      expect(findLastSafeSplitPoint(content)).toBe(19); // after the \r\n\r\n
     });
 
     it('should return content.length if the only \n\n is inside a code block and the end of content is not', () => {
@@ -35,6 +45,14 @@ describe('markdownUtilities', () => {
       // Split should be after "Second part.\n\n"
       // "First part.\n\n" is 13 chars. "Second part.\n\n" is 14 chars. Total 27.
       expect(findLastSafeSplitPoint(content)).toBe(27);
+    });
+
+    it('should correctly identify the last \r\n\r\n even if it is followed by text not in a code block', () => {
+      const content =
+        'First part.\r\n\r\nSecond part.\r\n\r\nThird part, then some more text.';
+      // Split should be after "Second part.\r\n\r\n"
+      // "First part.\r\n\r\n" is 15 chars. "Second part.\r\n\r\n" is 16 chars. Total 31.
+      expect(findLastSafeSplitPoint(content)).toBe(31);
     });
 
     it('should return content.length if content is empty', () => {
